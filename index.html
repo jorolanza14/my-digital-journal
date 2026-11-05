@@ -80,59 +80,58 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Spring-physics morphing for Dynamic Island */
+    /* Fixed Geometry Dynamic Island */
     .dynamic-island {
-      width: 330px;
+      width: 340px;
       height: 44px;
       border-radius: 9999px;
-      padding: 0 16px;
       background-color: #263426;
-      border: 1px solid rgba(167, 193, 165, 0.25);
-      box-shadow: 0 14px 34px -4px rgba(22, 34, 22, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-      transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-                  height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-                  border-radius 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-                  padding 0.35s ease;
+      border: 1px solid rgba(167, 193, 165, 0.28);
+      box-shadow: 0 14px 34px -4px rgba(22, 34, 22, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: width, height, border-radius;
       overflow: hidden;
+      position: relative;
     }
 
     .dynamic-island.is-expanded {
-      width: min(530px, calc(100vw - 32px));
-      height: 200px;
-      border-radius: 28px;
-      padding: 14px 18px;
+      width: min(540px, calc(100vw - 32px));
+      height: 204px;
+      border-radius: 26px;
     }
 
-    .island-view {
-      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform;
-    }
-
-    .island-collapsed-content {
+    /* Clear state layer visibility to fix mouse clicks */
+    .island-layer-collapsed {
       opacity: 1;
-      transform: scale(1);
+      visibility: visible;
       pointer-events: auto;
+      transition: opacity 0.2s ease, visibility 0.2s;
     }
 
-    .dynamic-island.is-expanded .island-collapsed-content {
+    .dynamic-island.is-expanded .island-layer-collapsed {
       opacity: 0;
-      transform: scale(0.96);
+      visibility: hidden;
       pointer-events: none;
     }
 
-    .island-expanded-content {
+    .island-layer-expanded {
       opacity: 0;
-      transform: scale(0.96) translateY(6px);
+      visibility: hidden;
       pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                  visibility 0.25s;
     }
 
-    .dynamic-island.is-expanded .island-expanded-content {
+    .dynamic-island.is-expanded .island-layer-expanded {
       opacity: 1;
-      transform: scale(1) translateY(0);
+      visibility: visible;
       pointer-events: auto;
-      transition-delay: 0.08s;
+      transform: translateY(0);
+      transition-delay: 0.05s;
     }
 
     .paper-shadow {
@@ -143,7 +142,6 @@
       box-shadow: 0 6px 16px rgba(35, 30, 25, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
-    /* Dialogue & Toast Transitions */
     #botanicalToast {
       transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
     }
@@ -177,11 +175,12 @@
        DYNAMIC ISLAND
        ======================================================== -->
   <header class="fixed top-4 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
-    <div id="dynamicIsland" class="pointer-events-auto dynamic-island relative text-parchment cursor-pointer select-none">
+    <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
       
-      <!-- Collapsed State -->
-      <div id="islandCollapsed" class="island-view island-collapsed-content absolute inset-0 px-4 flex items-center justify-between">
-        <div class="flex items-center gap-2.5 min-w-0">
+      <!-- COLLAPSED LAYER -->
+      <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-3.5 flex items-center justify-between">
+        <!-- Clickable Area to Expand Island -->
+        <div id="islandTriggerArea" class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer py-1.5" title="Click to view details">
           <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" title="Checking sync..."></div>
           <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5 truncate">
             <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0">Sync</span>
@@ -189,16 +188,19 @@
           </span>
         </div>
 
-        <div class="flex items-center gap-2 pl-3 border-l border-sage-700/50 flex-shrink-0">
+        <!-- Separate Button Container: Pointer Events Guaranteed -->
+        <div class="flex items-center gap-2 pl-2.5 border-l border-sage-700/50 flex-shrink-0">
           <span class="text-[11px] font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
-          <button onclick="event.stopPropagation(); checkAuthAndOpenModal();" class="w-7 h-7 bg-sage-500/80 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-transform active:scale-90" title="Quick Thought">
+          <button id="quickAddBtn" class="w-7 h-7 bg-sage-500 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm" title="Quick Thought">
             <i data-lucide="plus" class="w-4 h-4 text-white"></i>
           </button>
         </div>
       </div>
 
-      <!-- Expanded State -->
-      <div id="islandExpanded" class="island-view island-expanded-content flex flex-col justify-between h-full w-full">
+      <!-- EXPANDED LAYER -->
+      <div id="islandExpanded" class="island-layer-expanded flex flex-col justify-between h-full w-full p-4">
+        
+        <!-- Top bar inside Island -->
         <div class="flex items-center justify-between border-b border-sage-700/60 pb-2.5">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-sage-700/70 flex items-center justify-center flex-shrink-0">
@@ -206,29 +208,31 @@
             </div>
             <div>
               <p class="text-xs font-semibold text-white leading-tight" id="authStatusText">Folio Cloud Sync</p>
-              <p class="text-[10px] text-sage-300 truncate max-w-[200px]" id="authUserEmail">Connecting to Supabase...</p>
+              <p class="text-[10px] text-sage-300 truncate max-w-[210px]" id="authUserEmail">Connecting to Supabase...</p>
             </div>
           </div>
-          <button id="authBtn" onclick="event.stopPropagation(); toggleAuthModal(); closeIsland();" class="text-[10px] bg-sage-800/80 hover:bg-sage-700 text-sage-200 px-3 py-1 rounded-full border border-sage-600/40 font-mono transition">
+          <button id="authBtn" class="text-[10px] bg-sage-800/80 hover:bg-sage-700 text-sage-200 px-3 py-1 rounded-full border border-sage-600/40 font-mono transition cursor-pointer active:scale-95">
             Sign In
           </button>
         </div>
 
         <!-- Filter Buttons inside Island -->
-        <div class="grid grid-cols-4 gap-1.5 my-1">
-          <button onclick="event.stopPropagation(); setFilter('all'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">All</button>
-          <button onclick="event.stopPropagation(); setFilter('book'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">📖 Books</button>
-          <button onclick="event.stopPropagation(); setFilter('manga'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">📑 Manga</button>
-          <button onclick="event.stopPropagation(); setFilter('anime'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">🎬 Anime</button>
+        <div class="grid grid-cols-4 gap-1.5 my-1.5">
+          <button onclick="setFilter('all'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">All</button>
+          <button onclick="setFilter('book'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">📖 Books</button>
+          <button onclick="setFilter('manga'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">📑 Manga</button>
+          <button onclick="setFilter('anime'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
-        <div class="flex items-center justify-between pt-1">
+        <!-- Bottom bar inside Island -->
+        <div class="flex items-center justify-between pt-1 border-t border-sage-700/40">
           <span class="text-[11px] text-sage-400 font-reader italic" id="islandStats">0 unsaid thoughts</span>
-          <button onclick="event.stopPropagation(); checkAuthAndOpenModal(); closeIsland();" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm active:scale-95">
+          <button id="islandWriteBtn" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95">
             <i data-lucide="feather" class="w-3.5 h-3.5"></i>
             <span>Write Thought</span>
           </button>
         </div>
+
       </div>
 
     </div>
@@ -256,7 +260,7 @@
 
       <!-- Quick Action Button -->
       <div class="flex items-center gap-2.5">
-        <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium">
+        <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer">
           <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
           <span>Add New Scrap</span>
         </button>
@@ -265,16 +269,16 @@
 
     <!-- Filter Pills (Paper index tabs) -->
     <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
-      <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm">
+      <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer">
         All Readings
       </button>
-      <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50">
+      <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
         📖 Physical Books
       </button>
-      <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50">
+      <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
         📑 Manga & Manhwa
       </button>
-      <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50">
+      <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
         🎬 Anime
       </button>
     </section>
@@ -289,13 +293,13 @@
       </div>
       <h3 class="text-xl font-serif text-forest">A clean, blank page</h3>
       <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded for this medium yet.</p>
-      <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium">Add First Thought</button>
+      <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium cursor-pointer">Add First Thought</button>
     </div>
 
   </main>
 
   <!-- ========================================================
-       MODAL: AUTH (SIGN IN / SIGN UP SWITCHER - NO HARDCODED DATA)
+       MODAL: AUTH (SIGN IN / SIGN UP SWITCHER)
        ======================================================== -->
   <div id="authModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
@@ -318,17 +322,16 @@
           <input type="password" id="authPasswordInput" required placeholder="••••••••" minlength="6" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
         </div>
         
-        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 mt-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
+        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 mt-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">
           Sign In
         </button>
       </form>
 
-      <!-- Toggle between Sign In and Sign Up -->
       <div class="mt-4 pt-3 border-t border-kraftDark/40 flex items-center justify-between text-[11px]">
-        <button type="button" id="authModeToggleBtn" onclick="toggleAuthMode()" class="text-sage-700 hover:text-forest underline font-medium">
+        <button type="button" id="authModeToggleBtn" onclick="toggleAuthMode()" class="text-sage-700 hover:text-forest underline font-medium cursor-pointer">
           Need an account? Sign Up
         </button>
-        <button type="button" onclick="toggleAuthModal()" class="text-fadedInk hover:text-ink">
+        <button type="button" onclick="toggleAuthModal()" class="text-fadedInk hover:text-ink cursor-pointer">
           Close
         </button>
       </div>
@@ -348,8 +351,8 @@
       <h3 class="text-base font-serif text-forest mb-1">Tear Out Page?</h3>
       <p class="text-xs text-fadedInk mb-4">This unsaid thought will be permanently discarded from your journal.</p>
       <div class="grid grid-cols-2 gap-2">
-        <button type="button" onclick="closeConfirmModal()" class="px-3 py-2 text-xs font-medium rounded-lg bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink transition">Cancel</button>
-        <button type="button" id="confirmDeleteBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-700 hover:bg-red-800 text-white transition active:scale-95">Tear Page</button>
+        <button type="button" onclick="closeConfirmModal()" class="px-3 py-2 text-xs font-medium rounded-lg bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink transition cursor-pointer">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-700 hover:bg-red-800 text-white transition active:scale-95 cursor-pointer">Tear Page</button>
       </div>
     </div>
   </div>
@@ -366,7 +369,7 @@
           <h3 class="text-xl font-serif text-forest">Capture Unsaid Thought</h3>
           <p class="font-hand text-base text-sage-700">What quote or moment won't leave your head?</p>
         </div>
-        <button onclick="closeNewEntryModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
+        <button onclick="closeNewEntryModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition cursor-pointer">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -414,7 +417,7 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-fadedInk mb-1">Mood / Tone</label>
-            <select id="inputMood" class="w-full px-3 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+            <select id="inputMood" class="w-full px-3 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink cursor-pointer">
               <option value="melancholic">🌧️ Melancholic</option>
               <option value="cathartic">🌿 Cathartic</option>
               <option value="haunting">🕯️ Haunting</option>
@@ -440,8 +443,8 @@
         </div>
 
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
-          <button type="button" onclick="closeNewEntryModal()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
-          <button type="submit" id="saveEntryBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Tape to Journal</button>
+          <button type="button" onclick="closeNewEntryModal()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
+          <button type="submit" id="saveEntryBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">Tape to Journal</button>
         </div>
       </form>
     </div>
@@ -459,7 +462,7 @@
 
     // State
     let currentUser = null;
-    let authMode = 'signin'; // 'signin' or 'signup'
+    let authMode = 'signin';
     let pendingDeleteId = null;
     let entries = [];
     let currentFilter = 'all';
@@ -467,6 +470,11 @@
     let toastTimeout = null;
 
     const dynamicIsland = document.getElementById('dynamicIsland');
+    const islandTriggerArea = document.getElementById('islandTriggerArea');
+    const quickAddBtn = document.getElementById('quickAddBtn');
+    const islandWriteBtn = document.getElementById('islandWriteBtn');
+    const authBtn = document.getElementById('authBtn');
+
     const gridEl = document.getElementById('journalGrid');
     const emptyStateEl = document.getElementById('emptyState');
     const entryModal = document.getElementById('entryModal');
@@ -514,18 +522,54 @@
       toast.classList.remove('translate-y-0', 'opacity-100');
     }
 
-    // Dynamic Island State
-    function openIsland() { islandOpen = true; dynamicIsland.classList.add('is-expanded'); }
-    function closeIsland() { islandOpen = false; dynamicIsland.classList.remove('is-expanded'); }
-    function toggleIsland() { islandOpen ? closeIsland() : openIsland(); }
+    // Dynamic Island State Management
+    function openIsland() {
+      islandOpen = true;
+      dynamicIsland.classList.add('is-expanded');
+    }
 
-    dynamicIsland.addEventListener('click', (e) => {
-      if (e.target.closest('button')) return;
-      toggleIsland();
+    function closeIsland() {
+      if (!islandOpen) return;
+      islandOpen = false;
+      dynamicIsland.classList.remove('is-expanded');
+    }
+
+    function toggleIsland() {
+      islandOpen ? closeIsland() : openIsland();
+    }
+
+    // Wire Up Click Targets Explicitly (Fixes Buggy Desktop Click behavior)
+    islandTriggerArea.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openIsland();
     });
 
-    document.addEventListener('pointerdown', (e) => {
-      if (islandOpen && !dynamicIsland.contains(e.target)) closeIsland();
+    quickAddBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      checkAuthAndOpenModal();
+    });
+
+    islandWriteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeIsland();
+      checkAuthAndOpenModal();
+    });
+
+    authBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeIsland();
+      if (currentUser) {
+        handleSignOut();
+      } else {
+        toggleAuthModal();
+      }
+    });
+
+    // Close Island on click outside
+    document.addEventListener('click', (e) => {
+      if (islandOpen && !dynamicIsland.contains(e.target)) {
+        closeIsland();
+      }
     });
 
     document.addEventListener('keydown', (e) => {
@@ -559,13 +603,11 @@
         authStatusText.textContent = "Folio Synced";
         authUserEmail.textContent = user.email;
         authBtn.textContent = "Sign Out";
-        authBtn.onclick = handleSignOut;
         syncIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0";
       } else {
         authStatusText.textContent = "Cloud Not Connected";
         authUserEmail.textContent = "Sign in to sync across devices";
         authBtn.textContent = "Sign In";
-        authBtn.onclick = () => { toggleAuthModal(); closeIsland(); };
         syncIndicator.className = "w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0";
       }
     }
@@ -740,7 +782,7 @@
       }
     }
 
-    // 5. DATABASE: DELETE ENTRY (CUSTOM CONFIRMATION DIALOG)
+    // 5. DATABASE: DELETE ENTRY (CUSTOM CONFIRMATION MODAL)
     function promptDeleteEntry(id) {
       pendingDeleteId = id;
       confirmModal.classList.remove('hidden');
@@ -772,9 +814,9 @@
       currentFilter = type;
       document.querySelectorAll('.filter-pill').forEach(btn => {
         if (btn.getAttribute('data-filter') === type) {
-          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm";
+          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer";
         } else {
-          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50";
+          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer";
         }
       });
       render();
@@ -789,7 +831,7 @@
         document.getElementById('islandStats').textContent = `${entries.length} unsaid thoughts pinned`;
       } else {
         document.getElementById('islandTitle').textContent = currentUser ? "No thoughts pinned" : "Sign in to sync";
-        document.getElementById('islandMediaBadge').textContent = "Empty";
+        document.getElementById('islandMediaBadge').textContent = currentUser ? "Empty" : "Guest";
         document.getElementById('islandProgress').textContent = "—";
         document.getElementById('islandStats').textContent = "0 unsaid thoughts";
       }
@@ -867,7 +909,7 @@
                 <span class="font-semibold capitalize">${entry.mood}</span>
               </span>
               
-              <button onclick="promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1" title="Tear out page">
+              <button onclick="promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
