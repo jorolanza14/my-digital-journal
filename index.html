@@ -80,7 +80,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Spring morphing for Dynamic Island */
+    /* Dynamic Island Spring Morph */
     .dynamic-island {
       width: 330px;
       height: 44px;
@@ -267,7 +267,7 @@
   </main>
 
   <!-- ========================================================
-       MODAL: AUTH (MAGIC LINK / OTP)
+       MODAL: AUTH (6-DIGIT OTP FLOW)
        ======================================================== -->
   <div id="authModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
@@ -276,15 +276,27 @@
         <i data-lucide="key" class="w-6 h-6"></i>
       </div>
       <h3 class="text-xl font-serif text-forest mb-1">Sign In to Folio</h3>
-      <p class="text-xs text-fadedInk mb-5">Enter your email to receive a passwordless sign-in link.</p>
+      <p class="text-xs text-fadedInk mb-5">Sync notes across your iPad & phone.</p>
       
-      <form onsubmit="handleSendMagicLink(event)" class="space-y-3">
-        <input type="email" id="authEmailInput" required placeholder="name@example.com" class="w-full px-3.5 py-2.5 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
-        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
-          Send Magic Link
+      <!-- Step 1: Request Code -->
+      <form id="stepEmail" onsubmit="handleSendOtp(event)" class="space-y-3">
+        <input type="email" id="authEmailInput" required placeholder="Enter your email" class="w-full px-3.5 py-2.5 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        <button type="submit" id="sendOtpBtn" class="w-full py-2.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
+          Send 6-Digit Code
         </button>
       </form>
-      <button onclick="toggleAuthModal()" class="mt-4 text-xs text-fadedInk hover:text-ink underline">Close</button>
+
+      <!-- Step 2: Verify Code -->
+      <form id="stepToken" onsubmit="handleVerifyOtp(event)" class="space-y-3 hidden">
+        <p class="text-xs text-sage-700 font-medium">Code sent! Enter the 6 digits from your email:</p>
+        <input type="text" id="authOtpInput" maxlength="6" inputmode="numeric" pattern="[0-9]*" required placeholder="••••••" class="w-full px-3.5 py-2.5 text-center text-2xl tracking-[0.3em] font-mono bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        <button type="submit" id="verifyOtpBtn" class="w-full py-2.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
+          Verify & Sign In
+        </button>
+        <button type="button" onclick="resetAuthSteps()" class="text-[11px] text-fadedInk hover:text-ink underline block mx-auto">Use a different email</button>
+      </form>
+
+      <button type="button" onclick="toggleAuthModal()" class="mt-4 text-xs text-fadedInk hover:text-ink underline block mx-auto">Close</button>
     </div>
   </div>
 
@@ -382,7 +394,7 @@
   </div>
 
   <!-- ========================================================
-       SUPABASE CLIENT LOGIC & REALTIME SYNC
+       SUPABASE CLIENT LOGIC & OTP AUTHENTICATION
        ======================================================== -->
   <script>
     // 1. SUPABASE CLIENT
@@ -393,6 +405,7 @@
 
     // State
     let currentUser = null;
+    let pendingEmail = '';
     let entries = [];
     let currentFilter = 'all';
     let islandOpen = false;
@@ -403,7 +416,7 @@
     const entryModal = document.getElementById('entryModal');
     const authModal = document.getElementById('authModal');
 
-    // Dynamic Island open/close
+    // Dynamic Island Controls
     function openIsland() { 
       islandOpen = true; 
       dynamicIsland.classList.add('is-expanded'); 
@@ -424,7 +437,6 @@
       toggleIsland();
     });
 
-    // Dismiss Dynamic Island when tapping outside
     document.addEventListener('pointerdown', (e) => {
       if (islandOpen && !dynamicIsland.contains(e.target)) closeIsland();
     });
@@ -437,7 +449,12 @@
       }
     });
 
-    // 2. AUTHENTICATION HANDLERS
+    // Clean hash on startup if present
+    if (window.location.hash.includes('error=')) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+
+    // 2. AUTHENTICATION (OTP 6-DIGIT FLOW)
     async function initAuth() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       updateAuthState(session?.user || null);
@@ -484,26 +501,63 @@
       authModal.classList.toggle('flex');
     }
 
-    async function handleSendMagicLink(e) {
+    function resetAuthSteps() {
+      document.getElementById('stepEmail').classList.remove('hidden');
+      document.getElementById('stepToken').classList.add('hidden');
+      document.getElementById('authOtpInput').value = '';
+    }
+
+    // Send 6-digit code to email
+    async function handleSendOtp(e) {
       e.preventDefault();
       const email = document.getElementById('authEmailInput').value.trim();
-      const btn = document.getElementById('authSubmitBtn');
+      const btn = document.getElementById('sendOtpBtn');
       btn.disabled = true;
-      btn.textContent = "Sending...";
+      btn.textContent = "Sending code...";
 
       const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.href }
+        email: email,
+        options: {
+          shouldCreateUser: true
+        }
       });
 
-      if (error) {
-        alert("Sign-in failed: " + error.message);
-      } else {
-        alert("Magic link sent! Check your email and tap the link to finish signing in.");
-        toggleAuthModal();
-      }
       btn.disabled = false;
-      btn.textContent = "Send Magic Link";
+      btn.textContent = "Send 6-Digit Code";
+
+      if (error) {
+        alert("Error sending code: " + error.message);
+      } else {
+        pendingEmail = email;
+        document.getElementById('stepEmail').classList.add('hidden');
+        document.getElementById('stepToken').classList.remove('hidden');
+        document.getElementById('authOtpInput').focus();
+      }
+    }
+
+    // Verify 6-digit code
+    async function handleVerifyOtp(e) {
+      e.preventDefault();
+      const token = document.getElementById('authOtpInput').value.trim();
+      const btn = document.getElementById('verifyOtpBtn');
+      btn.disabled = true;
+      btn.textContent = "Verifying...";
+
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        email: pendingEmail,
+        token: token,
+        type: 'email'
+      });
+
+      btn.disabled = false;
+      btn.textContent = "Verify & Sign In";
+
+      if (error) {
+        alert("Invalid code: " + error.message);
+      } else {
+        toggleAuthModal();
+        resetAuthSteps();
+      }
     }
 
     async function handleSignOut() {
@@ -760,7 +814,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Initialize
+    // Startup
     document.addEventListener('DOMContentLoaded', () => {
       initAuth();
       setupRealtimeListener();
