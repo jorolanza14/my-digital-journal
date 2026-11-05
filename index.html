@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Folio — Aesthetic Botanical Scrapbook Journal</title>
+  
+  <!-- Fonts: Plus Jakarta Sans for UI, Playfair Display for Book Titles, Caveat for Handwriting -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: '#F6F3EB',
+            parchmentDark: '#EDE8DC',
+            sage: {
+              50: '#F4F7F4',
+              100: '#E4EDE3',
+              200: '#CADAC8',
+              300: '#A7C1A5',
+              500: '#60855E',
+              700: '#3F593E',
+              900: '#233423',
+            },
+            forest: '#263426',
+            kraft: '#E3D7C5',
+            kraftDark: '#D4C4AE',
+            ink: '#2B2B28',
+            fadedInk: '#6B685F'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+            reader: ['"Newsreader"', 'serif'],
+            hand: ['"Caveat"', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Physical notebook dot grid background */
+    .bg-dot-grid {
+      background-color: #F7F4EC;
+      background-image: radial-gradient(#C8C1AE 1.2px, transparent 1.2px);
+      background-size: 20px 20px;
+    }
+
+    /* Washi tape patterns */
+    .washi-gingham-green {
+      background-color: rgba(167, 193, 165, 0.75);
+      background-image: 
+        linear-gradient(90deg, rgba(255,255,255,.4) 50%, transparent 50%),
+        linear-gradient(rgba(255,255,255,.4) 50%, transparent 50%);
+      background-size: 10px 10px;
+      backdrop-filter: blur(1.5px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .washi-kraft {
+      background-color: rgba(227, 215, 197, 0.85);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(200, 180, 155, 0.3) 6px, rgba(200, 180, 155, 0.3) 12px);
+      backdrop-filter: blur(1px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .washi-sage-solid {
+      background-color: rgba(138, 168, 137, 0.7);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* Torn paper edge effect */
+    .torn-edge-bottom {
+      mask-image: radial-gradient(circle at 10px bottom, transparent 6px, black 6.5px);
+      mask-size: 20px 100%;
+      mask-repeat: repeat-x;
+    }
+
+    /* Spring-physics morphing for Dynamic Island */
+    .dynamic-island {
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 12px 30px -4px rgba(22, 34, 22, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    }
+
+    /* Subtle paper drop shadows */
+    .paper-shadow {
+      box-shadow: 2px 4px 14px rgba(45, 41, 35, 0.08), 0 1px 3px rgba(45, 41, 35, 0.04);
+    }
+    
+    .polaroid-shadow {
+      box-shadow: 0 6px 16px rgba(35, 30, 25, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Hide scrollbars for clean aesthetic */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest pb-24">
+
+  <!-- ========================================================
+       APPLE-STYLE DYNAMIC ISLAND (TOP CENTER NAVIGATION)
+       ======================================================== -->
+  <header class="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+    <div id="dynamicIsland" class="pointer-events-auto dynamic-island bg-forest text-parchment rounded-full cursor-pointer px-4 py-2 w-auto max-w-[92vw] md:max-w-xl flex items-center justify-between border border-sage-700/40 select-none overflow-hidden">
+      
+      <!-- Collapsed State Content -->
+      <div id="islandCollapsed" class="flex items-center gap-3 w-full justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5">
+            <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider">Manga</span>
+            <span id="islandTitle" class="truncate max-w-[130px] sm:max-w-[200px] text-white">Frieren: Beyond Journey's End</span>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 pl-3 border-l border-sage-700/50">
+          <span class="text-[11px] font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">Ch. 29</span>
+          <button onclick="event.stopPropagation(); openNewEntryModal();" class="w-7 h-7 bg-sage-500/80 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-transform active:scale-90" title="Quick Thought">
+            <i data-lucide="plus" class="w-4 h-4 text-white"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Expanded State Content (Appears on Click) -->
+      <div id="islandExpanded" class="hidden flex-col w-full py-2 px-1">
+        <div class="flex items-center justify-between border-b border-sage-700/60 pb-3 mb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-sage-700/70 flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-4 h-4 text-sage-300"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-white leading-tight">Folio Synced</p>
+              <p class="text-[10px] text-sage-300">iPad & Phone ready • Vercel Edge</p>
+            </div>
+          </div>
+          <span class="text-[10px] bg-sage-800/80 text-sage-300 px-2.5 py-1 rounded-full border border-sage-600/40 font-mono">Realtime</span>
+        </div>
+
+        <!-- Quick Switch Media Filters from Dynamic Island -->
+        <div class="grid grid-cols-4 gap-1.5 mb-3">
+          <button onclick="event.stopPropagation(); setFilter('all'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">All</button>
+          <button onclick="event.stopPropagation(); setFilter('book'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">📖 Books</button>
+          <button onclick="event.stopPropagation(); setFilter('manga'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">📑 Manga</button>
+          <button onclick="event.stopPropagation(); setFilter('anime'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">🎬 Anime</button>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-[11px] text-sage-400 font-reader italic" id="islandStats">4 unsaid thoughts pinned</span>
+          <button onclick="event.stopPropagation(); openNewEntryModal(); toggleIsland();" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="feather" class="w-3.5 h-3.5"></i>
+            <span>Write Thought</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================
+       MAIN SCRAPBOOK PAGE CONTAINER
+       ======================================================== -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28">
+    
+    <!-- Scrapbook Title & Botanical Doodle Area -->
+    <section class="relative mb-10 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage-100/80 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
+          <i data-lucide="leaf" class="w-3.5 h-3.5"></i>
+          <span>Leaves & Marginalia</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif text-forest tracking-tight">
+          Unsaid Thoughts.
+        </h1>
+        <p class="font-hand text-xl sm:text-2xl text-sage-700 mt-1 transform -rotate-1">
+          Reflections from the books, panels & scenes that linger.
+        </p>
+      </div>
+
+      <!-- Quick Action Buttons styled like physical tags -->
+      <div class="flex items-center gap-2.5">
+        <button onclick="openNewEntryModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium">
+          <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
+          <span>Add New Scrap</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Filter Pills (Styled like paper index tabs) -->
+    <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
+      <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm">
+        All Readings
+      </button>
+      <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50">
+        📖 Physical Books
+      </button>
+      <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50">
+        📑 Manga & Manhwa
+      </button>
+      <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50">
+        🎬 Anime
+      </button>
+    </section>
+
+    <!-- SCRAPBOOK CARDS GRID (MASONRY COLLAGE STYLE) -->
+    <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <!-- Cards will be populated by JavaScript -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-20 px-4">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-sage-100 flex items-center justify-center text-sage-500">
+        <i data-lucide="book-open" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-xl font-serif text-forest">A clean, blank page</h3>
+      <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded for this medium yet.</p>
+      <button onclick="openNewEntryModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium">Add First Thought</button>
+    </div>
+
+  </main>
+
+  <!-- ========================================================
+       MODAL: ADD NEW SCRAPBOOK ENTRY
+       ======================================================== -->
+  <div id="entryModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden transform transition-all">
+      
+      <!-- Washi tape at top of modal -->
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 washi-gingham-green rounded-sm z-10 rotate-1"></div>
+
+      <!-- Modal Header -->
+      <div class="px-6 pt-7 pb-4 border-b border-kraftDark/30 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-serif text-forest">Capture Unsaid Thought</h3>
+          <p class="font-hand text-base text-sage-700">What quote or moment won't leave your head?</p>
+        </div>
+        <button onclick="closeNewEntryModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form -->
+      <form id="entryForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto no-scrollbar">
+        
+        <!-- Medium Selector Tabs -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-fadedInk mb-2">Medium Type</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="mediaType" value="book" class="peer sr-only" checked onchange="updateFormPlaceholders()">
+              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/50 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+                📖 Book
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="mediaType" value="manga" class="peer sr-only" onchange="updateFormPlaceholders()">
+              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/50 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+                📑 Manga / Manhwa
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="mediaType" value="anime" class="peer sr-only" onchange="updateFormPlaceholders()">
+              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/50 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+                🎬 Anime
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Title & Creator -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1" id="labelTitle">Title</label>
+            <input type="text" id="inputTitle" required placeholder="e.g., Norwegian Wood" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1" id="labelCreator">Author / Studio</label>
+            <input type="text" id="inputCreator" placeholder="e.g., Haruki Murakami" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          </div>
+        </div>
+
+        <!-- Locator / Episode / Chapter -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1" id="labelLocator">Locator / Marker</label>
+            <input type="text" id="inputLocator" placeholder="p. 142 or Chapter 4" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1">Mood / Tone</label>
+            <select id="inputMood" class="w-full px-3 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+              <option value="melancholic">🌧️ Melancholic</option>
+              <option value="cathartic">🌿 Cathartic</option>
+              <option value="haunting">🕯️ Haunting</option>
+              <option value="serene">🍃 Serene</option>
+              <option value="euphoric">✨ Euphoric</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Passage / Dialogue Quote -->
+        <div>
+          <label class="block text-xs font-medium text-fadedInk mb-1" id="labelQuote">Passage or Dialogue Excerpt</label>
+          <textarea id="inputQuote" rows="2" placeholder="The exact lines that struck you..." class="w-full px-3.5 py-2 text-sm font-reader italic bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
+        </div>
+
+        <!-- Unsaid Thoughts / Marginalia -->
+        <div>
+          <label class="block text-xs font-medium text-fadedInk mb-1">Your Unsaid Thought (The Reflection)</label>
+          <textarea id="inputThought" rows="3" required placeholder="Write freely—raw interpretations, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
+        </div>
+
+        <!-- Polaroid / Image URL (For Panels or Screenshots) -->
+        <div>
+          <label class="block text-xs font-medium text-fadedInk mb-1">Optional Panel / Screenshot Image URL</label>
+          <input type="url" id="inputImage" placeholder="https://images.unsplash.com/... or panel screenshot link" class="w-full px-3.5 py-2 text-xs bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          <p class="text-[10px] text-fadedInk mt-1">Leave empty if you only want torn paper and typography.</p>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
+          <button type="button" onclick="closeNewEntryModal()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Tape to Journal</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       JAVASCRIPT LOGIC (LOCAL STORAGE & RESPONSIVE RENDERING)
+       ======================================================== -->
+  <script>
+    // Initial Seed Data with Books, Manga, and Anime examples
+    const defaultEntries = [
+      {
+        id: "entry-1",
+        mediaType: "manga",
+        title: "Frieren: Beyond Journey's End",
+        creator: "Kanehito Yamada",
+        locator: "Ch. 29 — An Ideal End",
+        mood: "melancholic",
+        quote: "It's because we knew our time was short that we wanted to know each other.",
+        thought: "I always believed staying distant kept you safe from grief. But Frieren spending decades retracing Himmel's casual steps made me realize avoiding sadness just leaves you stranded in regret later.",
+        imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=700&q=80",
+        tapeType: "washi-gingham-green",
+        tapeAngle: "-2deg",
+        date: "Nov 5, 2026"
+      },
+      {
+        id: "entry-2",
+        mediaType: "book",
+        title: "The Apple in the Dark",
+        creator: "Clarice Lispector",
+        locator: "p. 84",
+        mood: "haunting",
+        quote: "I heard a heart beating inside me that wasn't mine.",
+        thought: "The terrifying thing about silence isn't the quiet; it's discovering how many voices live in your head once the ambient room noise finally drops to zero.",
+        imageUrl: "",
+        tapeType: "washi-kraft",
+        tapeAngle: "1.5deg",
+        date: "Nov 3, 2026"
+      },
+      {
+        id: "entry-3",
+        mediaType: "anime",
+        title: "The Wind Rises",
+        creator: "Studio Ghibli",
+        locator: "Ep. Film • 1:42:10",
+        mood: "cathartic",
+        quote: "Le vent se lève!... Il faut tenter de vivre!",
+        thought: "We obsess over creating things that will outlast us, forgetting that the wind doesn't care who planted the field. All we can do is attempt to live while the breeze is still blowing.",
+        imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=700&q=80",
+        tapeType: "washi-sage-solid",
+        tapeAngle: "-1deg",
+        date: "Oct 29, 2026"
+      },
+      {
+        id: "entry-4",
+        mediaType: "manga",
+        title: "Omniscient Reader's Viewpoint",
+        creator: "Sing Shong / Sleepy-C",
+        locator: "Ch. 188",
+        mood: "serene",
+        quote: "Tell me, you fool. If I continue to regress, will I ever meet you again?",
+        thought: "You don't reread a story to find out what happens next; you reread it to spend time with the person you were when you first believed in the ending.",
+        imageUrl: "",
+        tapeType: "washi-gingham-green",
+        tapeAngle: "2.2deg",
+        date: "Oct 24, 2026"
+      }
+    ];
+
+    // State
+    let entries = JSON.parse(localStorage.getItem('folio_entries')) || defaultEntries;
+    let currentFilter = 'all';
+    let islandOpen = false;
+
+    // DOM Elements
+    const gridEl = document.getElementById('journalGrid');
+    const emptyStateEl = document.getElementById('emptyState');
+    const dynamicIsland = document.getElementById('dynamicIsland');
+    const islandCollapsed = document.getElementById('islandCollapsed');
+    const islandExpanded = document.getElementById('islandExpanded');
+    const entryModal = document.getElementById('entryModal');
+
+    // Save to LocalStorage
+    function persist() {
+      localStorage.setItem('folio_entries', JSON.stringify(entries));
+      render();
+      updateDynamicIsland();
+    }
+
+    // Toggle Dynamic Island expansion
+    function toggleIsland() {
+      islandOpen = !islandOpen;
+      if (islandOpen) {
+        dynamicIsland.classList.remove('rounded-full', 'px-4', 'py-2');
+        dynamicIsland.classList.add('rounded-3xl', 'px-5', 'py-4', 'w-full');
+        islandCollapsed.classList.add('hidden');
+        islandExpanded.classList.remove('hidden');
+      } else {
+        dynamicIsland.classList.remove('rounded-3xl', 'px-5', 'py-4', 'w-full');
+        dynamicIsland.classList.add('rounded-full', 'px-4', 'py-2');
+        islandCollapsed.classList.remove('hidden');
+        islandExpanded.classList.add('hidden');
+      }
+    }
+
+    dynamicIsland.addEventListener('click', (e) => {
+      // Don't toggle if clicking buttons directly
+      if (e.target.closest('button')) return;
+      toggleIsland();
+    });
+
+    // Filter Logic
+    function setFilter(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        if (btn.getAttribute('data-filter') === type) {
+          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm";
+        } else {
+          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50";
+        }
+      });
+      render();
+    }
+
+    // Update dynamic island status
+    function updateDynamicIsland() {
+      if (entries.length > 0) {
+        const latest = entries[0];
+        document.getElementById('islandTitle').textContent = latest.title;
+        document.getElementById('islandMediaBadge').textContent = latest.mediaType;
+        document.getElementById('islandProgress').textContent = latest.locator;
+        document.getElementById('islandStats').textContent = `${entries.length} unsaid thoughts pinned`;
+      }
+    }
+
+    // Render Scrapbook Grid
+    function render() {
+      const filtered = currentFilter === 'all' 
+        ? entries 
+        : entries.filter(e => e.mediaType === currentFilter);
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = '';
+        emptyStateEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyStateEl.classList.add('hidden');
+
+      gridEl.innerHTML = filtered.map((entry, index) => {
+        const randomRotations = ['-rotate-1', 'rotate-1', '-rotate-0.5', 'rotate-0.5'];
+        const rot = randomRotations[index % randomRotations.length];
+
+        // Media Type Tag details
+        let badgeIcon = 'book';
+        let badgeLabel = 'Physical Book';
+        if (entry.mediaType === 'manga') { badgeIcon = 'bookmark'; badgeLabel = 'Manga / Manhwa'; }
+        if (entry.mediaType === 'anime') { badgeIcon = 'film'; badgeLabel = 'Anime Moment'; }
+
+        return `
+          <article class="relative bg-white/90 rounded-2xl p-6 paper-shadow border border-kraftDark/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 transform ${rot} group">
+            
+            <!-- Washi tape at top -->
+            <div class="absolute -top-3.5 left-10 w-28 h-6 ${entry.tapeType || 'washi-gingham-green'} rounded-sm z-20" style="transform: rotate(${entry.tapeAngle || '-1deg'})"></div>
+            
+            <!-- Card Meta Header -->
+            <div class="flex items-center justify-between pt-1 mb-3 text-xs text-fadedInk">
+              <span class="inline-flex items-center gap-1.5 font-medium px-2.5 py-0.5 rounded-md bg-sage-50 text-sage-700 border border-sage-200/60">
+                <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
+                <span>${badgeLabel}</span>
+              </span>
+              <span class="font-mono text-[11px] text-fadedInk/80">${entry.date}</span>
+            </div>
+
+            <!-- Title & Creator -->
+            <div class="mb-4">
+              <h2 class="text-2xl font-serif text-forest leading-snug">${escapeHtml(entry.title)}</h2>
+              <p class="text-xs text-fadedInk font-sans mt-0.5">${escapeHtml(entry.creator || '')} • <span class="font-reader italic text-sage-700 font-medium">${escapeHtml(entry.locator)}</span></p>
+            </div>
+
+            <!-- Optional Panel Polaroid Frame (Manga/Anime/Book Cover) -->
+            ${entry.imageUrl ? `
+              <div class="mb-4 p-2.5 bg-white rounded-lg polaroid-shadow border border-kraftDark/40 transform -rotate-1">
+                <img src="${escapeHtml(entry.imageUrl)}" alt="Panel" class="w-full h-48 sm:h-52 object-cover rounded" loading="lazy" />
+                <p class="font-hand text-right text-xs text-fadedInk pt-1.5 pr-1">recorded fragment</p>
+              </div>
+            ` : ''}
+
+            <!-- Torn Passage Box -->
+            ${entry.quote ? `
+              <div class="relative bg-parchment p-4 rounded-xl border-l-4 border-sage-500 mb-4 shadow-inner">
+                <p class="font-reader italic text-forest/90 text-sm leading-relaxed">
+                  "${escapeHtml(entry.quote)}"
+                </p>
+              </div>
+            ` : ''}
+
+            <!-- Handwritten Marginalia / Unsaid Thought -->
+            <div class="relative pt-1">
+              <p class="text-[11px] uppercase tracking-wider font-semibold text-sage-700/80 mb-1 flex items-center gap-1">
+                <i data-lucide="feather" class="w-3 h-3"></i>
+                <span>Unsaid Reflection</span>
+              </p>
+              <p class="font-sans text-sm text-ink/90 leading-relaxed bg-kraft/15 p-3 rounded-lg border border-kraftDark/20">
+                ${escapeHtml(entry.thought)}
+              </p>
+            </div>
+
+            <!-- Footer Delete / Mood Pill -->
+            <div class="mt-4 pt-3 border-t border-kraftDark/25 flex items-center justify-between text-xs">
+              <span class="font-hand text-base text-sage-700 flex items-center gap-1">
+                <span>Tone:</span>
+                <span class="font-semibold capitalize">${entry.mood}</span>
+              </span>
+              
+              <button onclick="deleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-red-600 transition-opacity p-1" title="Tear out page">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+          </article>
+        `;
+      }).join('');
+
+      // Refresh icons
+      lucide.createIcons();
+    }
+
+    // Modal Control
+    function openNewEntryModal() {
+      entryModal.classList.remove('hidden');
+      entryModal.classList.add('flex');
+    }
+
+    function closeNewEntryModal() {
+      entryModal.classList.add('hidden');
+      entryModal.classList.remove('flex');
+      document.getElementById('entryForm').reset();
+    }
+
+    // Dynamic Form labels based on selected media
+    function updateFormPlaceholders() {
+      const type = document.querySelector('input[name="mediaType"]:checked').value;
+      const labelCreator = document.getElementById('labelCreator');
+      const inputCreator = document.getElementById('inputCreator');
+      const labelLocator = document.getElementById('labelLocator');
+      const inputLocator = document.getElementById('inputLocator');
+      const labelQuote = document.getElementById('labelQuote');
+
+      if (type === 'book') {
+        labelCreator.textContent = "Author";
+        inputCreator.placeholder = "e.g., Haruki Murakami";
+        labelLocator.textContent = "Page / Chapter";
+        inputLocator.placeholder = "e.g., p. 142 or Chapter 4";
+        labelQuote.textContent = "Passage Excerpt";
+      } else if (type === 'manga') {
+        labelCreator.textContent = "Mangaka / Studio";
+        inputCreator.placeholder = "e.g., Tatsuki Fujimoto";
+        labelLocator.textContent = "Chapter / Volume";
+        inputLocator.placeholder = "e.g., Ch. 71 or Vol. 3";
+        labelQuote.textContent = "Panel Dialogue";
+      } else if (type === 'anime') {
+        labelCreator.textContent = "Animation Studio / Director";
+        inputCreator.placeholder = "e.g., MAPPA or Makoto Shinkai";
+        labelLocator.textContent = "Episode & Timestamp";
+        inputLocator.placeholder = "e.g., Ep. 09 • 14:22";
+        labelQuote.textContent = "Spoken Dialogue / Line";
+      }
+    }
+
+    // Form Submission
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+      const title = document.getElementById('inputTitle').value.trim();
+      const creator = document.getElementById('inputCreator').value.trim();
+      const locator = document.getElementById('inputLocator').value.trim() || 'Unmarked';
+      const mood = document.getElementById('inputMood').value;
+      const quote = document.getElementById('inputQuote').value.trim();
+      const thought = document.getElementById('inputThought').value.trim();
+      const imageUrl = document.getElementById('inputImage').value.trim();
+
+      const tapes = ['washi-gingham-green', 'washi-kraft', 'washi-sage-solid'];
+      const tapeAngles = ['-2deg', '1.5deg', '-1deg', '2deg'];
+
+      const newEntry = {
+        id: "entry-" + Date.now(),
+        mediaType,
+        title,
+        creator,
+        locator,
+        mood,
+        quote,
+        thought,
+        imageUrl,
+        tapeType: tapes[Math.floor(Math.random() * tapes.length)],
+        tapeAngle: tapeAngles[Math.floor(Math.random() * tapeAngles.length)],
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      };
+
+      entries.unshift(newEntry);
+      persist();
+      closeNewEntryModal();
+    }
+
+    // Delete Item
+    function deleteEntry(id) {
+      if (confirm('Tear this scrap out of your journal?')) {
+        entries = entries.filter(e => e.id !== id);
+        persist();
+      }
+    }
+
+    // Helper: Escaping HTML to prevent injection
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      render();
+      updateDynamicIsland();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
