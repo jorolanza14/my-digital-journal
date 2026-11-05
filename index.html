@@ -80,29 +80,36 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Fixed Geometry Dynamic Island */
+    /* Resilient Dynamic Island Geometry */
     .dynamic-island {
-      width: 340px;
-      height: 44px;
+      width: 360px;
+      height: 48px;
       border-radius: 9999px;
-      background-color: #263426;
-      border: 1px solid rgba(167, 193, 165, 0.28);
-      box-shadow: 0 14px 34px -4px rgba(22, 34, 22, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: width, height, border-radius;
+      background-color: #243324;
+      border: 1px solid rgba(167, 193, 165, 0.35);
+      box-shadow: 0 16px 36px -4px rgba(18, 28, 18, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-radius 0.38s cubic-bezier(0.16, 1, 0.3, 1);
       overflow: hidden;
       position: relative;
     }
 
-    .dynamic-island.is-expanded {
-      width: min(540px, calc(100vw - 32px));
-      height: 204px;
-      border-radius: 26px;
+    /* Desktop Upscale */
+    @media (min-width: 768px) {
+      .dynamic-island {
+        width: 440px;
+        height: 52px;
+      }
     }
 
-    /* Clear state layer visibility to fix mouse clicks */
+    .dynamic-island.is-expanded {
+      width: min(620px, calc(100vw - 28px)) !important;
+      height: 232px !important;
+      border-radius: 28px !important;
+    }
+
+    /* Absolute Non-Interfering Layering */
     .island-layer-collapsed {
       opacity: 1;
       visibility: visible;
@@ -120,7 +127,7 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateY(4px);
+      transform: translateY(6px);
       transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
                   transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
                   visibility 0.25s;
@@ -155,7 +162,7 @@
   <!-- ========================================================
        BOTANICAL THEMED TOAST DIALOGUE BOX
        ======================================================== -->
-  <div class="fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+  <div class="fixed top-24 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
     <div id="botanicalToast" class="pointer-events-auto transform -translate-y-12 opacity-0 flex items-center gap-3 px-5 py-3 rounded-xl paper-shadow border max-w-md w-full bg-parchment text-ink select-none relative overflow-hidden transition-all duration-300">
       <div id="toastWashi" class="absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm"></div>
       <div id="toastIconBox" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-sage-100 text-forest">
@@ -172,64 +179,69 @@
   </div>
 
   <!-- ========================================================
-       DYNAMIC ISLAND
+       DYNAMIC ISLAND (UPSCALED & ERGONOMIC)
        ======================================================== -->
-  <header class="fixed top-4 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
+  <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
       
       <!-- COLLAPSED LAYER -->
-      <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-3.5 flex items-center justify-between">
-        <!-- Clickable Area to Expand Island -->
-        <div id="islandTriggerArea" class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer py-1.5" title="Click to view details">
-          <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" title="Checking sync..."></div>
-          <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5 truncate">
-            <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0">Sync</span>
-            <span id="islandTitle" class="truncate text-white">Connecting...</span>
+      <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-4 md:px-5 flex items-center justify-between">
+        <!-- Center Trigger Zone -->
+        <div id="islandTriggerArea" class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer py-2 group" title="Click to open journal control center">
+          <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform" title="Checking sync..."></div>
+          <span class="text-xs md:text-sm font-medium tracking-wide text-sage-200 flex items-center gap-2 truncate">
+            <span id="islandMediaBadge" class="text-[10px] md:text-[11px] bg-sage-700/70 text-sage-100 px-2.5 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0 font-semibold">Sync</span>
+            <span id="islandTitle" class="truncate text-white font-medium">Connecting...</span>
           </span>
         </div>
 
-        <!-- Separate Button Container: Pointer Events Guaranteed -->
-        <div class="flex items-center gap-2 pl-2.5 border-l border-sage-700/50 flex-shrink-0">
-          <span class="text-[11px] font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
-          <button id="quickAddBtn" class="w-7 h-7 bg-sage-500 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm" title="Quick Thought">
-            <i data-lucide="plus" class="w-4 h-4 text-white"></i>
+        <!-- Right Quick Action Controls -->
+        <div class="flex items-center gap-3 pl-3 border-l border-sage-700/60 flex-shrink-0">
+          <span class="text-xs font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
+          <button id="quickAddBtn" class="w-8 h-8 md:w-9 md:h-9 bg-sage-500 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm hover:shadow-md" title="Quick Thought">
+            <i data-lucide="plus" class="w-4 h-4 md:w-5 md:h-5 text-white"></i>
           </button>
         </div>
       </div>
 
       <!-- EXPANDED LAYER -->
-      <div id="islandExpanded" class="island-layer-expanded flex flex-col justify-between h-full w-full p-4">
+      <div id="islandExpanded" class="island-layer-expanded flex flex-col justify-between h-full w-full p-5">
         
-        <!-- Top bar inside Island -->
-        <div class="flex items-center justify-between border-b border-sage-700/60 pb-2.5">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-sage-700/70 flex items-center justify-center flex-shrink-0">
+        <!-- Top bar -->
+        <div class="flex items-center justify-between border-b border-sage-700/60 pb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-sage-700/80 flex items-center justify-center flex-shrink-0">
               <i data-lucide="sparkles" class="w-4 h-4 text-sage-300"></i>
             </div>
             <div>
-              <p class="text-xs font-semibold text-white leading-tight" id="authStatusText">Folio Cloud Sync</p>
-              <p class="text-[10px] text-sage-300 truncate max-w-[210px]" id="authUserEmail">Connecting to Supabase...</p>
+              <p class="text-sm font-semibold text-white leading-tight" id="authStatusText">Folio Cloud Sync</p>
+              <p class="text-xs text-sage-300 truncate max-w-[240px] md:max-w-xs mt-0.5" id="authUserEmail">Connecting to Supabase...</p>
             </div>
           </div>
-          <button id="authBtn" class="text-[10px] bg-sage-800/80 hover:bg-sage-700 text-sage-200 px-3 py-1 rounded-full border border-sage-600/40 font-mono transition cursor-pointer active:scale-95">
-            Sign In
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="authBtn" class="text-xs bg-sage-800 hover:bg-sage-700 text-sage-100 px-3.5 py-1.5 rounded-full border border-sage-600/50 font-mono transition cursor-pointer active:scale-95">
+              Sign In
+            </button>
+            <button onclick="closeIsland()" class="w-7 h-7 rounded-full bg-sage-800/80 hover:bg-sage-700 text-sage-300 flex items-center justify-center cursor-pointer transition">
+              <i data-lucide="chevron-up" class="w-4 h-4"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Filter Buttons inside Island -->
-        <div class="grid grid-cols-4 gap-1.5 my-1.5">
-          <button onclick="setFilter('all'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">All</button>
-          <button onclick="setFilter('book'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">📖 Books</button>
-          <button onclick="setFilter('manga'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">📑 Manga</button>
-          <button onclick="setFilter('anime'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center transition cursor-pointer active:scale-95">🎬 Anime</button>
+        <div class="grid grid-cols-4 gap-2 my-2">
+          <button onclick="setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
+          <button onclick="setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
+          <button onclick="setFilter('manga'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📑 Manga</button>
+          <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
-        <!-- Bottom bar inside Island -->
-        <div class="flex items-center justify-between pt-1 border-t border-sage-700/40">
-          <span class="text-[11px] text-sage-400 font-reader italic" id="islandStats">0 unsaid thoughts</span>
-          <button id="islandWriteBtn" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95">
-            <i data-lucide="feather" class="w-3.5 h-3.5"></i>
-            <span>Write Thought</span>
+        <!-- Bottom bar -->
+        <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
+          <span class="text-xs text-sage-400 font-reader italic" id="islandStats">0 unsaid thoughts</span>
+          <button id="islandWriteBtn" class="text-xs font-semibold bg-sage-300 hover:bg-sage-200 text-forest px-4 py-2 rounded-full font-sans transition flex items-center gap-2 shadow-sm cursor-pointer active:scale-95">
+            <i data-lucide="feather" class="w-4 h-4"></i>
+            <span>Write New Thought</span>
           </button>
         </div>
 
@@ -241,12 +253,12 @@
   <!-- ========================================================
        MAIN SCRAPBOOK PAGE CONTAINER
        ======================================================== -->
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28">
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32">
     
     <!-- Title Section -->
     <section class="relative mb-10 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage-100/80 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-100/90 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
           <i data-lucide="leaf" class="w-3.5 h-3.5"></i>
           <span>Leaves & Marginalia</span>
         </div>
@@ -454,13 +466,11 @@
        SUPABASE CLIENT LOGIC & REALTIME SYNC
        ======================================================== -->
   <script>
-    // 1. SUPABASE CLIENT
     const SUPABASE_URL = 'https://lfhhbrvcawmtpepdsnze.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SeFB0mT0R20P1q54R8Q9VQ_RDGlLVXY';
     
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // State
     let currentUser = null;
     let authMode = 'signin';
     let pendingDeleteId = null;
@@ -522,7 +532,7 @@
       toast.classList.remove('translate-y-0', 'opacity-100');
     }
 
-    // Dynamic Island State Management
+    // Dynamic Island State Controls
     function openIsland() {
       islandOpen = true;
       dynamicIsland.classList.add('is-expanded');
@@ -534,11 +544,7 @@
       dynamicIsland.classList.remove('is-expanded');
     }
 
-    function toggleIsland() {
-      islandOpen ? closeIsland() : openIsland();
-    }
-
-    // Wire Up Click Targets Explicitly (Fixes Buggy Desktop Click behavior)
+    // Dedicated Click Handlers (Independent & Responsive)
     islandTriggerArea.addEventListener('click', (e) => {
       e.stopPropagation();
       openIsland();
@@ -565,7 +571,7 @@
       }
     });
 
-    // Close Island on click outside
+    // Close when clicking page background
     document.addEventListener('click', (e) => {
       if (islandOpen && !dynamicIsland.contains(e.target)) {
         closeIsland();
@@ -581,7 +587,7 @@
       }
     });
 
-    // 2. AUTHENTICATION (EMAIL & PASSWORD WITH TOGGLE)
+    // AUTHENTICATION
     async function initAuth() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       updateAuthState(session?.user || null);
@@ -697,7 +703,7 @@
       showToast("Signed Out", "Your thoughts remain safe in the cloud.", "success");
     }
 
-    // 3. DATABASE: LOAD ENTRIES & REALTIME SYNC
+    // DATABASE OPERATIONS
     async function loadEntriesFromCloud() {
       if (!currentUser) {
         entries = [];
@@ -730,7 +736,6 @@
         .subscribe();
     }
 
-    // 4. DATABASE: INSERT ENTRY
     async function handleFormSubmit(e) {
       e.preventDefault();
       if (!currentUser) return;
@@ -782,7 +787,6 @@
       }
     }
 
-    // 5. DATABASE: DELETE ENTRY (CUSTOM CONFIRMATION MODAL)
     function promptDeleteEntry(id) {
       pendingDeleteId = id;
       confirmModal.classList.remove('hidden');
@@ -809,7 +813,7 @@
       }
     });
 
-    // 6. RENDER LOGIC
+    // RENDER
     function setFilter(type) {
       currentFilter = type;
       document.querySelectorAll('.filter-pill').forEach(btn => {
@@ -965,7 +969,6 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Startup
     document.addEventListener('DOMContentLoaded', () => {
       initAuth();
       setupRealtimeListener();
