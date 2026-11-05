@@ -80,7 +80,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Resilient Dynamic Island Geometry */
+    /* Dynamic Island */
     .dynamic-island {
       width: 360px;
       height: 48px;
@@ -95,7 +95,6 @@
       position: relative;
     }
 
-    /* Desktop Upscale */
     @media (min-width: 768px) {
       .dynamic-island {
         width: 440px;
@@ -109,7 +108,6 @@
       border-radius: 28px !important;
     }
 
-    /* Absolute Non-Interfering Layering */
     .island-layer-collapsed {
       opacity: 1;
       visibility: visible;
@@ -179,14 +177,13 @@
   </div>
 
   <!-- ========================================================
-       DYNAMIC ISLAND (UPSCALED & ERGONOMIC)
+       DYNAMIC ISLAND
        ======================================================== -->
   <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
       
       <!-- COLLAPSED LAYER -->
       <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-4 md:px-5 flex items-center justify-between">
-        <!-- Center Trigger Zone -->
         <div id="islandTriggerArea" class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer py-2 group" title="Click to open journal control center">
           <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform" title="Checking sync..."></div>
           <span class="text-xs md:text-sm font-medium tracking-wide text-sage-200 flex items-center gap-2 truncate">
@@ -195,7 +192,6 @@
           </span>
         </div>
 
-        <!-- Right Quick Action Controls -->
         <div class="flex items-center gap-3 pl-3 border-l border-sage-700/60 flex-shrink-0">
           <span class="text-xs font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
           <button id="quickAddBtn" class="w-8 h-8 md:w-9 md:h-9 bg-sage-500 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm hover:shadow-md" title="Quick Thought">
@@ -206,8 +202,6 @@
 
       <!-- EXPANDED LAYER -->
       <div id="islandExpanded" class="island-layer-expanded flex flex-col justify-between h-full w-full p-5">
-        
-        <!-- Top bar -->
         <div class="flex items-center justify-between border-b border-sage-700/60 pb-3">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-sage-700/80 flex items-center justify-center flex-shrink-0">
@@ -236,7 +230,7 @@
           <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
-        <!-- Bottom bar -->
+        <!-- Bottom bar inside Island -->
         <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
           <span class="text-xs text-sage-400 font-reader italic" id="islandStats">0 unsaid thoughts</span>
           <button id="islandWriteBtn" class="text-xs font-semibold bg-sage-300 hover:bg-sage-200 text-forest px-4 py-2 rounded-full font-sans transition flex items-center gap-2 shadow-sm cursor-pointer active:scale-95">
@@ -244,7 +238,6 @@
             <span>Write New Thought</span>
           </button>
         </div>
-
       </div>
 
     </div>
@@ -254,8 +247,6 @@
        MAIN SCRAPBOOK PAGE CONTAINER
        ======================================================== -->
   <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32">
-    
-    <!-- Title Section -->
     <section class="relative mb-10 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
       <div>
         <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-100/90 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
@@ -270,7 +261,6 @@
         </p>
       </div>
 
-      <!-- Quick Action Button -->
       <div class="flex items-center gap-2.5">
         <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer">
           <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
@@ -279,7 +269,7 @@
       </div>
     </section>
 
-    <!-- Filter Pills (Paper index tabs) -->
+    <!-- Filters -->
     <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
       <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer">
         All Readings
@@ -307,11 +297,10 @@
       <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded for this medium yet.</p>
       <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium cursor-pointer">Add First Thought</button>
     </div>
-
   </main>
 
   <!-- ========================================================
-       MODAL: AUTH (SIGN IN / SIGN UP SWITCHER)
+       MODAL: AUTH
        ======================================================== -->
   <div id="authModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
@@ -347,12 +336,11 @@
           Close
         </button>
       </div>
-
     </div>
   </div>
 
   <!-- ========================================================
-       MODAL: CUSTOM CONFIRMATION (TEAR OUT PAGE)
+       MODAL: CONFIRMATION
        ======================================================== -->
   <div id="confirmModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
@@ -370,7 +358,7 @@
   </div>
 
   <!-- ========================================================
-       MODAL: ADD NEW SCRAPBOOK ENTRY
+       MODAL: ADD NEW SCRAPBOOK ENTRY (WITH DEVICE IMAGE UPLOAD)
        ======================================================== -->
   <div id="entryModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden transform transition-all">
@@ -449,9 +437,23 @@
           <textarea id="inputThought" rows="3" required placeholder="Write freely—raw interpretations, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
         </div>
 
+        <!-- NEW: DEVICE IMAGE UPLOADER -->
         <div>
-          <label class="block text-xs font-medium text-fadedInk mb-1">Optional Panel / Screenshot Image URL</label>
-          <input type="url" id="inputImage" placeholder="https://... panel image link" class="w-full px-3.5 py-2 text-xs bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          <label class="block text-xs font-medium text-fadedInk mb-1">Panel Screenshot / Photo (From Device)</label>
+          <div class="flex items-center gap-3">
+            <label class="flex-1 cursor-pointer flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-kraftDark hover:border-sage-500 rounded-xl bg-white/50 hover:bg-sage-50 transition text-xs font-medium text-sage-700">
+              <i data-lucide="image-plus" class="w-4 h-4"></i>
+              <span id="uploadLabelText">Choose Image from Device</span>
+              <input type="file" id="inputFileUpload" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+            </label>
+            <div id="imagePreviewBox" class="hidden relative w-12 h-12 rounded-lg overflow-hidden border border-kraftDark flex-shrink-0">
+              <img id="imagePreview" src="" class="w-full h-full object-cover">
+              <button type="button" onclick="clearSelectedFile()" class="absolute inset-0 bg-forest/60 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+          <p class="text-[10px] text-fadedInk mt-1">Accepts screenshots, camera photos, or downloaded anime/manga panels.</p>
         </div>
 
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
@@ -474,6 +476,7 @@
     let currentUser = null;
     let authMode = 'signin';
     let pendingDeleteId = null;
+    let selectedFile = null;
     let entries = [];
     let currentFilter = 'all';
     let islandOpen = false;
@@ -521,9 +524,7 @@
       toast.classList.add('translate-y-0', 'opacity-100');
 
       if (toastTimeout) clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        hideToast();
-      }, 4000);
+      toastTimeout = setTimeout(() => hideToast(), 4000);
     }
 
     function hideToast() {
@@ -544,7 +545,7 @@
       dynamicIsland.classList.remove('is-expanded');
     }
 
-    // Dedicated Click Handlers (Independent & Responsive)
+    // Dedicated Click Handlers
     islandTriggerArea.addEventListener('click', (e) => {
       e.stopPropagation();
       openIsland();
@@ -571,7 +572,6 @@
       }
     });
 
-    // Close when clicking page background
     document.addEventListener('click', (e) => {
       if (islandOpen && !dynamicIsland.contains(e.target)) {
         closeIsland();
@@ -586,6 +586,47 @@
         if (!authModal.classList.contains('hidden')) toggleAuthModal();
       }
     });
+
+    // FILE SELECTION & PREVIEW
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      selectedFile = file;
+      document.getElementById('uploadLabelText').textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById('imagePreview').src = event.target.result;
+        document.getElementById('imagePreviewBox').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearSelectedFile() {
+      selectedFile = null;
+      document.getElementById('inputFileUpload').value = '';
+      document.getElementById('uploadLabelText').textContent = 'Choose Image from Device';
+      document.getElementById('imagePreviewBox').classList.add('hidden');
+    }
+
+    // Upload Helper: Uploads to Supabase storage bucket 'journal-images'
+    async function uploadImageFile(file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabaseClient.storage
+        .from('journal-images')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabaseClient.storage
+        .from('journal-images')
+        .getPublicUrl(fileName);
+
+      return publicUrlData.publicUrl;
+    }
 
     // AUTHENTICATION
     async function initAuth() {
@@ -742,7 +783,19 @@
 
       const saveBtn = document.getElementById('saveEntryBtn');
       saveBtn.disabled = true;
-      saveBtn.textContent = "Taping to cloud...";
+      saveBtn.textContent = "Uploading & Taping...";
+
+      let uploadedImageUrl = '';
+
+      // Upload file from device if chosen
+      if (selectedFile) {
+        try {
+          uploadedImageUrl = await uploadImageFile(selectedFile);
+        } catch (uploadErr) {
+          console.warn("Storage upload failed, falling back to base64 preview:", uploadErr);
+          uploadedImageUrl = document.getElementById('imagePreview').src;
+        }
+      }
 
       const media_type = document.querySelector('input[name="mediaType"]:checked').value;
       const title = document.getElementById('inputTitle').value.trim();
@@ -751,7 +804,6 @@
       const mood = document.getElementById('inputMood').value;
       const quote = document.getElementById('inputQuote').value.trim();
       const thought = document.getElementById('inputThought').value.trim();
-      const image_url = document.getElementById('inputImage').value.trim();
 
       const tapes = ['washi-gingham-green', 'washi-kraft', 'washi-sage-solid'];
       const tapeAngles = ['-2deg', '1.5deg', '-1deg', '2deg'];
@@ -765,7 +817,7 @@
         mood,
         quote,
         thought,
-        image_url,
+        image_url: uploadedImageUrl,
         tape_type: tapes[Math.floor(Math.random() * tapes.length)],
         tape_angle: tapeAngles[Math.floor(Math.random() * tapeAngles.length)]
       };
@@ -782,6 +834,7 @@
         showToast("Save Failed", error.message, "error");
       } else {
         closeNewEntryModal();
+        clearSelectedFile();
         loadEntriesFromCloud();
         showToast("Thought Recorded", `Taped "${title}" into your journal.`, "success");
       }
@@ -933,6 +986,7 @@
       entryModal.classList.add('hidden');
       entryModal.classList.remove('flex');
       document.getElementById('entryForm').reset();
+      clearSelectedFile();
     }
 
     function updateFormPlaceholders() {
