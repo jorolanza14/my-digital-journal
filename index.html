@@ -81,20 +81,63 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Torn paper edge effect */
-    .torn-edge-bottom {
-      mask-image: radial-gradient(circle at 10px bottom, transparent 6px, black 6.5px);
-      mask-size: 20px 100%;
-      mask-repeat: repeat-x;
-    }
-
     /* Spring-physics morphing for Dynamic Island */
     .dynamic-island {
-      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 12px 30px -4px rgba(22, 34, 22, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      width: 320px;
+      height: 44px;
+      border-radius: 9999px;
+      padding: 0 16px;
+      background-color: #263426;
+      border: 1px solid rgba(167, 193, 165, 0.25);
+      box-shadow: 0 14px 34px -4px rgba(22, 34, 22, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-radius 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  padding 0.35s ease;
+      will-change: width, height, border-radius;
+      overflow: hidden;
     }
 
-    /* Subtle paper drop shadows */
+    .dynamic-island.is-expanded {
+      width: min(520px, calc(100vw - 32px));
+      height: 184px;
+      border-radius: 28px;
+      padding: 14px 18px;
+    }
+
+    /* Internal contents cross-fade */
+    .island-view {
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+
+    .island-collapsed-content {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .dynamic-island.is-expanded .island-collapsed-content {
+      opacity: 0;
+      transform: scale(0.96);
+      pointer-events: none;
+    }
+
+    .island-expanded-content {
+      opacity: 0;
+      transform: scale(0.96) translateY(6px);
+      pointer-events: none;
+    }
+
+    .dynamic-island.is-expanded .island-expanded-content {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+      transition-delay: 0.08s;
+    }
+
+    /* Paper shadows */
     .paper-shadow {
       box-shadow: 2px 4px 14px rgba(45, 41, 35, 0.08), 0 1px 3px rgba(45, 41, 35, 0.04);
     }
@@ -103,7 +146,7 @@
       box-shadow: 0 6px 16px rgba(35, 30, 25, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
-    /* Hide scrollbars for clean aesthetic */
+    /* Hide scrollbars */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -119,19 +162,19 @@
        APPLE-STYLE DYNAMIC ISLAND (TOP CENTER NAVIGATION)
        ======================================================== -->
   <header class="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-    <div id="dynamicIsland" class="pointer-events-auto dynamic-island bg-forest text-parchment rounded-full cursor-pointer px-4 py-2 w-auto max-w-[92vw] md:max-w-xl flex items-center justify-between border border-sage-700/40 select-none overflow-hidden">
+    <div id="dynamicIsland" class="pointer-events-auto dynamic-island relative text-parchment cursor-pointer select-none">
       
-      <!-- Collapsed State Content -->
-      <div id="islandCollapsed" class="flex items-center gap-3 w-full justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-          <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5">
-            <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider">Manga</span>
-            <span id="islandTitle" class="truncate max-w-[130px] sm:max-w-[200px] text-white">Frieren: Beyond Journey's End</span>
+      <!-- Collapsed View (Pinned 44px pill height) -->
+      <div id="islandCollapsed" class="island-view island-collapsed-content absolute inset-0 px-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></div>
+          <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5 truncate">
+            <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0">Manga</span>
+            <span id="islandTitle" class="truncate text-white">Frieren: Beyond Journey's End</span>
           </span>
         </div>
 
-        <div class="flex items-center gap-2 pl-3 border-l border-sage-700/50">
+        <div class="flex items-center gap-2 pl-3 border-l border-sage-700/50 flex-shrink-0">
           <span class="text-[11px] font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">Ch. 29</span>
           <button onclick="event.stopPropagation(); openNewEntryModal();" class="w-7 h-7 bg-sage-500/80 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-transform active:scale-90" title="Quick Thought">
             <i data-lucide="plus" class="w-4 h-4 text-white"></i>
@@ -139,11 +182,11 @@
         </div>
       </div>
 
-      <!-- Expanded State Content (Appears on Click) -->
-      <div id="islandExpanded" class="hidden flex-col w-full py-2 px-1">
-        <div class="flex items-center justify-between border-b border-sage-700/60 pb-3 mb-3">
+      <!-- Expanded View (Revealed smoothly inside expanded geometry) -->
+      <div id="islandExpanded" class="island-view island-expanded-content flex flex-col justify-between h-full w-full">
+        <div class="flex items-center justify-between border-b border-sage-700/60 pb-2.5">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-sage-700/70 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-sage-700/70 flex items-center justify-center flex-shrink-0">
               <i data-lucide="sparkles" class="w-4 h-4 text-sage-300"></i>
             </div>
             <div>
@@ -154,17 +197,17 @@
           <span class="text-[10px] bg-sage-800/80 text-sage-300 px-2.5 py-1 rounded-full border border-sage-600/40 font-mono">Realtime</span>
         </div>
 
-        <!-- Quick Switch Media Filters from Dynamic Island -->
-        <div class="grid grid-cols-4 gap-1.5 mb-3">
-          <button onclick="event.stopPropagation(); setFilter('all'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">All</button>
-          <button onclick="event.stopPropagation(); setFilter('book'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">📖 Books</button>
-          <button onclick="event.stopPropagation(); setFilter('manga'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">📑 Manga</button>
-          <button onclick="event.stopPropagation(); setFilter('anime'); toggleIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition">🎬 Anime</button>
+        <!-- Quick Switch Media Filters -->
+        <div class="grid grid-cols-4 gap-1.5 my-1">
+          <button onclick="event.stopPropagation(); setFilter('all'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">All</button>
+          <button onclick="event.stopPropagation(); setFilter('book'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">📖 Books</button>
+          <button onclick="event.stopPropagation(); setFilter('manga'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">📑 Manga</button>
+          <button onclick="event.stopPropagation(); setFilter('anime'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">🎬 Anime</button>
         </div>
 
         <div class="flex items-center justify-between pt-1">
           <span class="text-[11px] text-sage-400 font-reader italic" id="islandStats">4 unsaid thoughts pinned</span>
-          <button onclick="event.stopPropagation(); openNewEntryModal(); toggleIsland();" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm">
+          <button onclick="event.stopPropagation(); openNewEntryModal(); closeIsland();" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm active:scale-95">
             <i data-lucide="feather" class="w-3.5 h-3.5"></i>
             <span>Write Thought</span>
           </button>
@@ -179,7 +222,7 @@
        ======================================================== -->
   <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28">
     
-    <!-- Scrapbook Title & Botanical Doodle Area -->
+    <!-- Title & Subtitle Section -->
     <section class="relative mb-10 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
       <div>
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage-100/80 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
@@ -194,7 +237,7 @@
         </p>
       </div>
 
-      <!-- Quick Action Buttons styled like physical tags -->
+      <!-- Action Button -->
       <div class="flex items-center gap-2.5">
         <button onclick="openNewEntryModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium">
           <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
@@ -203,7 +246,7 @@
       </div>
     </section>
 
-    <!-- Filter Pills (Styled like paper index tabs) -->
+    <!-- Filter Pills (Paper index tabs) -->
     <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
       <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm">
         All Readings
@@ -221,7 +264,7 @@
 
     <!-- SCRAPBOOK CARDS GRID (MASONRY COLLAGE STYLE) -->
     <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-      <!-- Cards will be populated by JavaScript -->
+      <!-- Injected dynamically via JavaScript -->
     </div>
 
     <!-- Empty State -->
@@ -326,7 +369,7 @@
           <textarea id="inputThought" rows="3" required placeholder="Write freely—raw interpretations, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
         </div>
 
-        <!-- Polaroid / Image URL (For Panels or Screenshots) -->
+        <!-- Polaroid / Image URL -->
         <div>
           <label class="block text-xs font-medium text-fadedInk mb-1">Optional Panel / Screenshot Image URL</label>
           <input type="url" id="inputImage" placeholder="https://images.unsplash.com/... or panel screenshot link" class="w-full px-3.5 py-2 text-xs bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
@@ -344,10 +387,10 @@
   </div>
 
   <!-- ========================================================
-       JAVASCRIPT LOGIC (LOCAL STORAGE & RESPONSIVE RENDERING)
+       JAVASCRIPT LOGIC
        ======================================================== -->
   <script>
-    // Initial Seed Data with Books, Manga, and Anime examples
+    // Initial Seed Data
     const defaultEntries = [
       {
         id: "entry-1",
@@ -416,38 +459,55 @@
     const gridEl = document.getElementById('journalGrid');
     const emptyStateEl = document.getElementById('emptyState');
     const dynamicIsland = document.getElementById('dynamicIsland');
-    const islandCollapsed = document.getElementById('islandCollapsed');
-    const islandExpanded = document.getElementById('islandExpanded');
     const entryModal = document.getElementById('entryModal');
 
-    // Save to LocalStorage
+    // Dynamic Island State Management
+    function openIsland() {
+      islandOpen = true;
+      dynamicIsland.classList.add('is-expanded');
+    }
+
+    function closeIsland() {
+      if (!islandOpen) return;
+      islandOpen = false;
+      dynamicIsland.classList.remove('is-expanded');
+    }
+
+    function toggleIsland() {
+      if (islandOpen) {
+        closeIsland();
+      } else {
+        openIsland();
+      }
+    }
+
+    // Toggle on capsule click
+    dynamicIsland.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      toggleIsland();
+    });
+
+    // Close on click/tap outside anywhere on the screen
+    document.addEventListener('pointerdown', (e) => {
+      if (islandOpen && !dynamicIsland.contains(e.target)) {
+        closeIsland();
+      }
+    });
+
+    // Dismiss on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeIsland();
+        closeNewEntryModal();
+      }
+    });
+
+    // Local Storage persistence
     function persist() {
       localStorage.setItem('folio_entries', JSON.stringify(entries));
       render();
       updateDynamicIsland();
     }
-
-    // Toggle Dynamic Island expansion
-    function toggleIsland() {
-      islandOpen = !islandOpen;
-      if (islandOpen) {
-        dynamicIsland.classList.remove('rounded-full', 'px-4', 'py-2');
-        dynamicIsland.classList.add('rounded-3xl', 'px-5', 'py-4', 'w-full');
-        islandCollapsed.classList.add('hidden');
-        islandExpanded.classList.remove('hidden');
-      } else {
-        dynamicIsland.classList.remove('rounded-3xl', 'px-5', 'py-4', 'w-full');
-        dynamicIsland.classList.add('rounded-full', 'px-4', 'py-2');
-        islandCollapsed.classList.remove('hidden');
-        islandExpanded.classList.add('hidden');
-      }
-    }
-
-    dynamicIsland.addEventListener('click', (e) => {
-      // Don't toggle if clicking buttons directly
-      if (e.target.closest('button')) return;
-      toggleIsland();
-    });
 
     // Filter Logic
     function setFilter(type) {
@@ -462,7 +522,7 @@
       render();
     }
 
-    // Update dynamic island status
+    // Update dynamic island metrics
     function updateDynamicIsland() {
       if (entries.length > 0) {
         const latest = entries[0];
@@ -491,7 +551,6 @@
         const randomRotations = ['-rotate-1', 'rotate-1', '-rotate-0.5', 'rotate-0.5'];
         const rot = randomRotations[index % randomRotations.length];
 
-        // Media Type Tag details
         let badgeIcon = 'book';
         let badgeLabel = 'Physical Book';
         if (entry.mediaType === 'manga') { badgeIcon = 'bookmark'; badgeLabel = 'Manga / Manhwa'; }
@@ -503,7 +562,7 @@
             <!-- Washi tape at top -->
             <div class="absolute -top-3.5 left-10 w-28 h-6 ${entry.tapeType || 'washi-gingham-green'} rounded-sm z-20" style="transform: rotate(${entry.tapeAngle || '-1deg'})"></div>
             
-            <!-- Card Meta Header -->
+            <!-- Card Header -->
             <div class="flex items-center justify-between pt-1 mb-3 text-xs text-fadedInk">
               <span class="inline-flex items-center gap-1.5 font-medium px-2.5 py-0.5 rounded-md bg-sage-50 text-sage-700 border border-sage-200/60">
                 <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
@@ -518,7 +577,7 @@
               <p class="text-xs text-fadedInk font-sans mt-0.5">${escapeHtml(entry.creator || '')} • <span class="font-reader italic text-sage-700 font-medium">${escapeHtml(entry.locator)}</span></p>
             </div>
 
-            <!-- Optional Panel Polaroid Frame (Manga/Anime/Book Cover) -->
+            <!-- Optional Panel Polaroid Frame -->
             ${entry.imageUrl ? `
               <div class="mb-4 p-2.5 bg-white rounded-lg polaroid-shadow border border-kraftDark/40 transform -rotate-1">
                 <img src="${escapeHtml(entry.imageUrl)}" alt="Panel" class="w-full h-48 sm:h-52 object-cover rounded" loading="lazy" />
@@ -546,7 +605,7 @@
               </p>
             </div>
 
-            <!-- Footer Delete / Mood Pill -->
+            <!-- Footer: Mood & Delete -->
             <div class="mt-4 pt-3 border-t border-kraftDark/25 flex items-center justify-between text-xs">
               <span class="font-hand text-base text-sage-700 flex items-center gap-1">
                 <span>Tone:</span>
@@ -562,11 +621,10 @@
         `;
       }).join('');
 
-      // Refresh icons
       lucide.createIcons();
     }
 
-    // Modal Control
+    // Modal Handlers
     function openNewEntryModal() {
       entryModal.classList.remove('hidden');
       entryModal.classList.add('flex');
@@ -578,7 +636,7 @@
       document.getElementById('entryForm').reset();
     }
 
-    // Dynamic Form labels based on selected media
+    // Dynamic Form labels
     function updateFormPlaceholders() {
       const type = document.querySelector('input[name="mediaType"]:checked').value;
       const labelCreator = document.getElementById('labelCreator');
@@ -651,7 +709,7 @@
       }
     }
 
-    // Helper: Escaping HTML to prevent injection
+    // Escape HTML to prevent XSS
     function escapeHtml(str) {
       if (!str) return '';
       return str
