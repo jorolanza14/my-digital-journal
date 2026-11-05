@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Folio — Aesthetic Botanical Scrapbook Journal</title>
   
-  <!-- Fonts: Plus Jakarta Sans for UI, Playfair Display for Book Titles, Caveat for Handwriting -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
     tailwind.config = {
@@ -50,14 +51,12 @@
   </script>
 
   <style>
-    /* Physical notebook dot grid background */
     .bg-dot-grid {
       background-color: #F7F4EC;
       background-image: radial-gradient(#C8C1AE 1.2px, transparent 1.2px);
       background-size: 20px 20px;
     }
 
-    /* Washi tape patterns */
     .washi-gingham-green {
       background-color: rgba(167, 193, 165, 0.75);
       background-image: 
@@ -81,9 +80,9 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Spring-physics morphing for Dynamic Island */
+    /* Spring morphing for Dynamic Island */
     .dynamic-island {
-      width: 320px;
+      width: 330px;
       height: 44px;
       border-radius: 9999px;
       padding: 0 16px;
@@ -99,13 +98,12 @@
     }
 
     .dynamic-island.is-expanded {
-      width: min(520px, calc(100vw - 32px));
-      height: 184px;
+      width: min(530px, calc(100vw - 32px));
+      height: 200px;
       border-radius: 28px;
       padding: 14px 18px;
     }
 
-    /* Internal contents cross-fade */
     .island-view {
       transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
                   transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -137,7 +135,6 @@
       transition-delay: 0.08s;
     }
 
-    /* Paper shadows */
     .paper-shadow {
       box-shadow: 2px 4px 14px rgba(45, 41, 35, 0.08), 0 1px 3px rgba(45, 41, 35, 0.04);
     }
@@ -146,43 +143,37 @@
       box-shadow: 0 6px 16px rgba(35, 30, 25, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
-    /* Hide scrollbars */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest pb-24">
 
   <!-- ========================================================
-       APPLE-STYLE DYNAMIC ISLAND (TOP CENTER NAVIGATION)
+       DYNAMIC ISLAND
        ======================================================== -->
   <header class="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island relative text-parchment cursor-pointer select-none">
       
-      <!-- Collapsed View (Pinned 44px pill height) -->
+      <!-- Collapsed State -->
       <div id="islandCollapsed" class="island-view island-collapsed-content absolute inset-0 px-4 flex items-center justify-between">
         <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></div>
+          <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" title="Checking status..."></div>
           <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5 truncate">
-            <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0">Manga</span>
-            <span id="islandTitle" class="truncate text-white">Frieren: Beyond Journey's End</span>
+            <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0">Sync</span>
+            <span id="islandTitle" class="truncate text-white">Connecting...</span>
           </span>
         </div>
 
         <div class="flex items-center gap-2 pl-3 border-l border-sage-700/50 flex-shrink-0">
-          <span class="text-[11px] font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">Ch. 29</span>
-          <button onclick="event.stopPropagation(); openNewEntryModal();" class="w-7 h-7 bg-sage-500/80 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-transform active:scale-90" title="Quick Thought">
+          <span class="text-[11px] font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
+          <button onclick="event.stopPropagation(); checkAuthAndOpenModal();" class="w-7 h-7 bg-sage-500/80 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-transform active:scale-90" title="Quick Thought">
             <i data-lucide="plus" class="w-4 h-4 text-white"></i>
           </button>
         </div>
       </div>
 
-      <!-- Expanded View (Revealed smoothly inside expanded geometry) -->
+      <!-- Expanded State -->
       <div id="islandExpanded" class="island-view island-expanded-content flex flex-col justify-between h-full w-full">
         <div class="flex items-center justify-between border-b border-sage-700/60 pb-2.5">
           <div class="flex items-center gap-2.5">
@@ -190,14 +181,16 @@
               <i data-lucide="sparkles" class="w-4 h-4 text-sage-300"></i>
             </div>
             <div>
-              <p class="text-xs font-semibold text-white leading-tight">Folio Synced</p>
-              <p class="text-[10px] text-sage-300">iPad & Phone ready • Vercel Edge</p>
+              <p class="text-xs font-semibold text-white leading-tight" id="authStatusText">Folio Cloud Sync</p>
+              <p class="text-[10px] text-sage-300 truncate max-w-[200px]" id="authUserEmail">Connecting to Supabase...</p>
             </div>
           </div>
-          <span class="text-[10px] bg-sage-800/80 text-sage-300 px-2.5 py-1 rounded-full border border-sage-600/40 font-mono">Realtime</span>
+          <button id="authBtn" onclick="event.stopPropagation(); toggleAuthModal(); closeIsland();" class="text-[10px] bg-sage-800/80 hover:bg-sage-700 text-sage-200 px-3 py-1 rounded-full border border-sage-600/40 font-mono transition">
+            Sign In
+          </button>
         </div>
 
-        <!-- Quick Switch Media Filters -->
+        <!-- Filter Buttons inside Island -->
         <div class="grid grid-cols-4 gap-1.5 my-1">
           <button onclick="event.stopPropagation(); setFilter('all'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">All</button>
           <button onclick="event.stopPropagation(); setFilter('book'); closeIsland();" class="text-[11px] py-1.5 rounded-lg bg-sage-800/60 hover:bg-sage-700 text-sage-200 text-center transition active:scale-95">📖 Books</button>
@@ -206,8 +199,8 @@
         </div>
 
         <div class="flex items-center justify-between pt-1">
-          <span class="text-[11px] text-sage-400 font-reader italic" id="islandStats">4 unsaid thoughts pinned</span>
-          <button onclick="event.stopPropagation(); openNewEntryModal(); closeIsland();" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm active:scale-95">
+          <span class="text-[11px] text-sage-400 font-reader italic" id="islandStats">0 unsaid thoughts</span>
+          <button onclick="event.stopPropagation(); checkAuthAndOpenModal(); closeIsland();" class="text-xs font-medium bg-sage-300 hover:bg-sage-200 text-forest px-3.5 py-1.5 rounded-full font-sans transition flex items-center gap-1.5 shadow-sm active:scale-95">
             <i data-lucide="feather" class="w-3.5 h-3.5"></i>
             <span>Write Thought</span>
           </button>
@@ -218,11 +211,9 @@
   </header>
 
   <!-- ========================================================
-       MAIN SCRAPBOOK PAGE CONTAINER
+       MAIN PAGE
        ======================================================== -->
   <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28">
-    
-    <!-- Title & Subtitle Section -->
     <section class="relative mb-10 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
       <div>
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage-100/80 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
@@ -237,16 +228,15 @@
         </p>
       </div>
 
-      <!-- Action Button -->
       <div class="flex items-center gap-2.5">
-        <button onclick="openNewEntryModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium">
+        <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium">
           <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
           <span>Add New Scrap</span>
         </button>
       </div>
     </section>
 
-    <!-- Filter Pills (Paper index tabs) -->
+    <!-- Filters -->
     <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
       <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm">
         All Readings
@@ -262,10 +252,8 @@
       </button>
     </section>
 
-    <!-- SCRAPBOOK CARDS GRID (MASONRY COLLAGE STYLE) -->
-    <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-      <!-- Injected dynamically via JavaScript -->
-    </div>
+    <!-- Grid -->
+    <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"></div>
 
     <!-- Empty State -->
     <div id="emptyState" class="hidden text-center py-20 px-4">
@@ -274,21 +262,39 @@
       </div>
       <h3 class="text-xl font-serif text-forest">A clean, blank page</h3>
       <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded for this medium yet.</p>
-      <button onclick="openNewEntryModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium">Add First Thought</button>
+      <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium">Add First Thought</button>
     </div>
-
   </main>
 
   <!-- ========================================================
-       MODAL: ADD NEW SCRAPBOOK ENTRY
+       MODAL: AUTH (MAGIC LINK / OTP)
+       ======================================================== -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
+      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
+        <i data-lucide="key" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-xl font-serif text-forest mb-1">Sign In to Folio</h3>
+      <p class="text-xs text-fadedInk mb-5">Enter your email to receive a passwordless sign-in link.</p>
+      
+      <form onsubmit="handleSendMagicLink(event)" class="space-y-3">
+        <input type="email" id="authEmailInput" required placeholder="name@example.com" class="w-full px-3.5 py-2.5 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
+          Send Magic Link
+        </button>
+      </form>
+      <button onclick="toggleAuthModal()" class="mt-4 text-xs text-fadedInk hover:text-ink underline">Close</button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: ADD ENTRY
        ======================================================== -->
   <div id="entryModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden transform transition-all">
-      
-      <!-- Washi tape at top of modal -->
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 washi-gingham-green rounded-sm z-10 rotate-1"></div>
 
-      <!-- Modal Header -->
       <div class="px-6 pt-7 pb-4 border-b border-kraftDark/30 flex items-center justify-between">
         <div>
           <h3 class="text-xl font-serif text-forest">Capture Unsaid Thought</h3>
@@ -299,10 +305,7 @@
         </button>
       </div>
 
-      <!-- Modal Form -->
       <form id="entryForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto no-scrollbar">
-        
-        <!-- Medium Selector Tabs -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-fadedInk mb-2">Medium Type</label>
           <div class="grid grid-cols-3 gap-2">
@@ -327,7 +330,6 @@
           </div>
         </div>
 
-        <!-- Title & Creator -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-fadedInk mb-1" id="labelTitle">Title</label>
@@ -339,7 +341,6 @@
           </div>
         </div>
 
-        <!-- Locator / Episode / Chapter -->
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-fadedInk mb-1" id="labelLocator">Locator / Marker</label>
@@ -357,159 +358,253 @@
           </div>
         </div>
 
-        <!-- Passage / Dialogue Quote -->
         <div>
           <label class="block text-xs font-medium text-fadedInk mb-1" id="labelQuote">Passage or Dialogue Excerpt</label>
           <textarea id="inputQuote" rows="2" placeholder="The exact lines that struck you..." class="w-full px-3.5 py-2 text-sm font-reader italic bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
         </div>
 
-        <!-- Unsaid Thoughts / Marginalia -->
         <div>
           <label class="block text-xs font-medium text-fadedInk mb-1">Your Unsaid Thought (The Reflection)</label>
           <textarea id="inputThought" rows="3" required placeholder="Write freely—raw interpretations, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
         </div>
 
-        <!-- Polaroid / Image URL -->
         <div>
           <label class="block text-xs font-medium text-fadedInk mb-1">Optional Panel / Screenshot Image URL</label>
-          <input type="url" id="inputImage" placeholder="https://images.unsplash.com/... or panel screenshot link" class="w-full px-3.5 py-2 text-xs bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
-          <p class="text-[10px] text-fadedInk mt-1">Leave empty if you only want torn paper and typography.</p>
+          <input type="url" id="inputImage" placeholder="https://... panel image link" class="w-full px-3.5 py-2 text-xs bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
         </div>
 
-        <!-- Submit Button -->
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
           <button type="button" onclick="closeNewEntryModal()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
-          <button type="submit" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Tape to Journal</button>
+          <button type="submit" id="saveEntryBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Tape to Journal</button>
         </div>
-
       </form>
     </div>
   </div>
 
   <!-- ========================================================
-       JAVASCRIPT LOGIC
+       SUPABASE CLIENT LOGIC & REALTIME SYNC
        ======================================================== -->
   <script>
-    // Initial Seed Data
-    const defaultEntries = [
-      {
-        id: "entry-1",
-        mediaType: "manga",
-        title: "Frieren: Beyond Journey's End",
-        creator: "Kanehito Yamada",
-        locator: "Ch. 29 — An Ideal End",
-        mood: "melancholic",
-        quote: "It's because we knew our time was short that we wanted to know each other.",
-        thought: "I always believed staying distant kept you safe from grief. But Frieren spending decades retracing Himmel's casual steps made me realize avoiding sadness just leaves you stranded in regret later.",
-        imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=700&q=80",
-        tapeType: "washi-gingham-green",
-        tapeAngle: "-2deg",
-        date: "Nov 5, 2026"
-      },
-      {
-        id: "entry-2",
-        mediaType: "book",
-        title: "The Apple in the Dark",
-        creator: "Clarice Lispector",
-        locator: "p. 84",
-        mood: "haunting",
-        quote: "I heard a heart beating inside me that wasn't mine.",
-        thought: "The terrifying thing about silence isn't the quiet; it's discovering how many voices live in your head once the ambient room noise finally drops to zero.",
-        imageUrl: "",
-        tapeType: "washi-kraft",
-        tapeAngle: "1.5deg",
-        date: "Nov 3, 2026"
-      },
-      {
-        id: "entry-3",
-        mediaType: "anime",
-        title: "The Wind Rises",
-        creator: "Studio Ghibli",
-        locator: "Ep. Film • 1:42:10",
-        mood: "cathartic",
-        quote: "Le vent se lève!... Il faut tenter de vivre!",
-        thought: "We obsess over creating things that will outlast us, forgetting that the wind doesn't care who planted the field. All we can do is attempt to live while the breeze is still blowing.",
-        imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=700&q=80",
-        tapeType: "washi-sage-solid",
-        tapeAngle: "-1deg",
-        date: "Oct 29, 2026"
-      },
-      {
-        id: "entry-4",
-        mediaType: "manga",
-        title: "Omniscient Reader's Viewpoint",
-        creator: "Sing Shong / Sleepy-C",
-        locator: "Ch. 188",
-        mood: "serene",
-        quote: "Tell me, you fool. If I continue to regress, will I ever meet you again?",
-        thought: "You don't reread a story to find out what happens next; you reread it to spend time with the person you were when you first believed in the ending.",
-        imageUrl: "",
-        tapeType: "washi-gingham-green",
-        tapeAngle: "2.2deg",
-        date: "Oct 24, 2026"
-      }
-    ];
+    // 1. SUPABASE CLIENT
+    const SUPABASE_URL = 'https://lfhhbrvcawmtpepdsnze.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SeFB0mT0R20P1q54R8Q9VQ_RDGlLVXY';
+    
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // State
-    let entries = JSON.parse(localStorage.getItem('folio_entries')) || defaultEntries;
+    let currentUser = null;
+    let entries = [];
     let currentFilter = 'all';
     let islandOpen = false;
 
-    // DOM Elements
+    const dynamicIsland = document.getElementById('dynamicIsland');
     const gridEl = document.getElementById('journalGrid');
     const emptyStateEl = document.getElementById('emptyState');
-    const dynamicIsland = document.getElementById('dynamicIsland');
     const entryModal = document.getElementById('entryModal');
+    const authModal = document.getElementById('authModal');
 
-    // Dynamic Island State Management
-    function openIsland() {
-      islandOpen = true;
-      dynamicIsland.classList.add('is-expanded');
+    // Dynamic Island open/close
+    function openIsland() { 
+      islandOpen = true; 
+      dynamicIsland.classList.add('is-expanded'); 
     }
-
-    function closeIsland() {
+    
+    function closeIsland() { 
       if (!islandOpen) return;
-      islandOpen = false;
-      dynamicIsland.classList.remove('is-expanded');
+      islandOpen = false; 
+      dynamicIsland.classList.remove('is-expanded'); 
+    }
+    
+    function toggleIsland() { 
+      islandOpen ? closeIsland() : openIsland(); 
     }
 
-    function toggleIsland() {
-      if (islandOpen) {
-        closeIsland();
-      } else {
-        openIsland();
-      }
-    }
-
-    // Toggle on capsule click
     dynamicIsland.addEventListener('click', (e) => {
       if (e.target.closest('button')) return;
       toggleIsland();
     });
 
-    // Close on click/tap outside anywhere on the screen
+    // Dismiss Dynamic Island when tapping outside
     document.addEventListener('pointerdown', (e) => {
-      if (islandOpen && !dynamicIsland.contains(e.target)) {
-        closeIsland();
-      }
+      if (islandOpen && !dynamicIsland.contains(e.target)) closeIsland();
     });
 
-    // Dismiss on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeIsland();
         closeNewEntryModal();
+        if (!authModal.classList.contains('hidden')) toggleAuthModal();
       }
     });
 
-    // Local Storage persistence
-    function persist() {
-      localStorage.setItem('folio_entries', JSON.stringify(entries));
+    // 2. AUTHENTICATION HANDLERS
+    async function initAuth() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      updateAuthState(session?.user || null);
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        updateAuthState(session?.user || null);
+        loadEntriesFromCloud();
+      });
+    }
+
+    function updateAuthState(user) {
+      currentUser = user;
+      const authBtn = document.getElementById('authBtn');
+      const authStatusText = document.getElementById('authStatusText');
+      const authUserEmail = document.getElementById('authUserEmail');
+      const syncIndicator = document.getElementById('syncIndicator');
+
+      if (user) {
+        authStatusText.textContent = "Folio Synced";
+        authUserEmail.textContent = user.email;
+        authBtn.textContent = "Sign Out";
+        authBtn.onclick = handleSignOut;
+        syncIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0";
+      } else {
+        authStatusText.textContent = "Cloud Not Connected";
+        authUserEmail.textContent = "Sign in to sync across devices";
+        authBtn.textContent = "Sign In";
+        authBtn.onclick = () => { toggleAuthModal(); closeIsland(); };
+        syncIndicator.className = "w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0";
+      }
+    }
+
+    function checkAuthAndOpenModal() {
+      if (!currentUser) {
+        alert("Please sign in first so your notes sync across your iPad and phone!");
+        toggleAuthModal();
+        return;
+      }
+      openNewEntryModal();
+    }
+
+    function toggleAuthModal() {
+      authModal.classList.toggle('hidden');
+      authModal.classList.toggle('flex');
+    }
+
+    async function handleSendMagicLink(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim();
+      const btn = document.getElementById('authSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+      });
+
+      if (error) {
+        alert("Sign-in failed: " + error.message);
+      } else {
+        alert("Magic link sent! Check your email and tap the link to finish signing in.");
+        toggleAuthModal();
+      }
+      btn.disabled = false;
+      btn.textContent = "Send Magic Link";
+    }
+
+    async function handleSignOut() {
+      await supabaseClient.auth.signOut();
+      entries = [];
+      render();
+    }
+
+    // 3. DATABASE: LOAD ENTRIES & REALTIME SYNC
+    async function loadEntriesFromCloud() {
+      if (!currentUser) {
+        entries = [];
+        render();
+        updateDynamicIsland();
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from('entries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching entries:", error);
+        return;
+      }
+
+      entries = data || [];
       render();
       updateDynamicIsland();
     }
 
-    // Filter Logic
+    function setupRealtimeListener() {
+      supabaseClient
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, () => {
+          loadEntriesFromCloud();
+        })
+        .subscribe();
+    }
+
+    // 4. DATABASE: INSERT ENTRY
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const saveBtn = document.getElementById('saveEntryBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Taping to cloud...";
+
+      const media_type = document.querySelector('input[name="mediaType"]:checked').value;
+      const title = document.getElementById('inputTitle').value.trim();
+      const creator = document.getElementById('inputCreator').value.trim();
+      const locator = document.getElementById('inputLocator').value.trim() || 'Unmarked';
+      const mood = document.getElementById('inputMood').value;
+      const quote = document.getElementById('inputQuote').value.trim();
+      const thought = document.getElementById('inputThought').value.trim();
+      const image_url = document.getElementById('inputImage').value.trim();
+
+      const tapes = ['washi-gingham-green', 'washi-kraft', 'washi-sage-solid'];
+      const tapeAngles = ['-2deg', '1.5deg', '-1deg', '2deg'];
+
+      const newRecord = {
+        user_id: currentUser.id,
+        media_type,
+        title,
+        creator,
+        locator,
+        mood,
+        quote,
+        thought,
+        image_url,
+        tape_type: tapes[Math.floor(Math.random() * tapes.length)],
+        tape_angle: tapeAngles[Math.floor(Math.random() * tapeAngles.length)]
+      };
+
+      const { data, error } = await supabaseClient
+        .from('entries')
+        .insert([newRecord])
+        .select();
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Tape to Journal";
+
+      if (error) {
+        alert("Failed to save: " + error.message);
+      } else {
+        closeNewEntryModal();
+        loadEntriesFromCloud();
+      }
+    }
+
+    // 5. DATABASE: DELETE ENTRY
+    async function deleteEntry(id) {
+      if (!confirm('Tear this scrap out of your journal?')) return;
+      const { error } = await supabaseClient.from('entries').delete().eq('id', id);
+      if (error) alert("Failed to delete: " + error.message);
+      else loadEntriesFromCloud();
+    }
+
+    // 6. RENDER LOGIC
     function setFilter(type) {
       currentFilter = type;
       document.querySelectorAll('.filter-pill').forEach(btn => {
@@ -522,22 +617,25 @@
       render();
     }
 
-    // Update dynamic island metrics
     function updateDynamicIsland() {
       if (entries.length > 0) {
         const latest = entries[0];
         document.getElementById('islandTitle').textContent = latest.title;
-        document.getElementById('islandMediaBadge').textContent = latest.mediaType;
+        document.getElementById('islandMediaBadge').textContent = latest.media_type;
         document.getElementById('islandProgress').textContent = latest.locator;
         document.getElementById('islandStats').textContent = `${entries.length} unsaid thoughts pinned`;
+      } else {
+        document.getElementById('islandTitle').textContent = currentUser ? "No thoughts pinned" : "Sign in to sync";
+        document.getElementById('islandMediaBadge').textContent = "Empty";
+        document.getElementById('islandProgress').textContent = "—";
+        document.getElementById('islandStats').textContent = "0 unsaid thoughts";
       }
     }
 
-    // Render Scrapbook Grid
     function render() {
       const filtered = currentFilter === 'all' 
         ? entries 
-        : entries.filter(e => e.mediaType === currentFilter);
+        : entries.filter(e => e.media_type === currentFilter);
 
       if (filtered.length === 0) {
         gridEl.innerHTML = '';
@@ -553,39 +651,35 @@
 
         let badgeIcon = 'book';
         let badgeLabel = 'Physical Book';
-        if (entry.mediaType === 'manga') { badgeIcon = 'bookmark'; badgeLabel = 'Manga / Manhwa'; }
-        if (entry.mediaType === 'anime') { badgeIcon = 'film'; badgeLabel = 'Anime Moment'; }
+        if (entry.media_type === 'manga') { badgeIcon = 'bookmark'; badgeLabel = 'Manga / Manhwa'; }
+        if (entry.media_type === 'anime') { badgeIcon = 'film'; badgeLabel = 'Anime Moment'; }
+
+        const formattedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
         return `
           <article class="relative bg-white/90 rounded-2xl p-6 paper-shadow border border-kraftDark/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 transform ${rot} group">
+            <div class="absolute -top-3.5 left-10 w-28 h-6 ${entry.tape_type || 'washi-gingham-green'} rounded-sm z-20" style="transform: rotate(${entry.tape_angle || '-1deg'})"></div>
             
-            <!-- Washi tape at top -->
-            <div class="absolute -top-3.5 left-10 w-28 h-6 ${entry.tapeType || 'washi-gingham-green'} rounded-sm z-20" style="transform: rotate(${entry.tapeAngle || '-1deg'})"></div>
-            
-            <!-- Card Header -->
             <div class="flex items-center justify-between pt-1 mb-3 text-xs text-fadedInk">
               <span class="inline-flex items-center gap-1.5 font-medium px-2.5 py-0.5 rounded-md bg-sage-50 text-sage-700 border border-sage-200/60">
                 <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
                 <span>${badgeLabel}</span>
               </span>
-              <span class="font-mono text-[11px] text-fadedInk/80">${entry.date}</span>
+              <span class="font-mono text-[11px] text-fadedInk/80">${formattedDate}</span>
             </div>
 
-            <!-- Title & Creator -->
             <div class="mb-4">
               <h2 class="text-2xl font-serif text-forest leading-snug">${escapeHtml(entry.title)}</h2>
               <p class="text-xs text-fadedInk font-sans mt-0.5">${escapeHtml(entry.creator || '')} • <span class="font-reader italic text-sage-700 font-medium">${escapeHtml(entry.locator)}</span></p>
             </div>
 
-            <!-- Optional Panel Polaroid Frame -->
-            ${entry.imageUrl ? `
+            ${entry.image_url ? `
               <div class="mb-4 p-2.5 bg-white rounded-lg polaroid-shadow border border-kraftDark/40 transform -rotate-1">
-                <img src="${escapeHtml(entry.imageUrl)}" alt="Panel" class="w-full h-48 sm:h-52 object-cover rounded" loading="lazy" />
+                <img src="${escapeHtml(entry.image_url)}" alt="Panel" class="w-full h-48 sm:h-52 object-cover rounded" loading="lazy" />
                 <p class="font-hand text-right text-xs text-fadedInk pt-1.5 pr-1">recorded fragment</p>
               </div>
             ` : ''}
 
-            <!-- Torn Passage Box -->
             ${entry.quote ? `
               <div class="relative bg-parchment p-4 rounded-xl border-l-4 border-sage-500 mb-4 shadow-inner">
                 <p class="font-reader italic text-forest/90 text-sm leading-relaxed">
@@ -594,7 +688,6 @@
               </div>
             ` : ''}
 
-            <!-- Handwritten Marginalia / Unsaid Thought -->
             <div class="relative pt-1">
               <p class="text-[11px] uppercase tracking-wider font-semibold text-sage-700/80 mb-1 flex items-center gap-1">
                 <i data-lucide="feather" class="w-3 h-3"></i>
@@ -605,7 +698,6 @@
               </p>
             </div>
 
-            <!-- Footer: Mood & Delete -->
             <div class="mt-4 pt-3 border-t border-kraftDark/25 flex items-center justify-between text-xs">
               <span class="font-hand text-base text-sage-700 flex items-center gap-1">
                 <span>Tone:</span>
@@ -616,7 +708,6 @@
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
-
           </article>
         `;
       }).join('');
@@ -624,7 +715,6 @@
       lucide.createIcons();
     }
 
-    // Modal Handlers
     function openNewEntryModal() {
       entryModal.classList.remove('hidden');
       entryModal.classList.add('flex');
@@ -636,7 +726,6 @@
       document.getElementById('entryForm').reset();
     }
 
-    // Dynamic Form labels
     function updateFormPlaceholders() {
       const type = document.querySelector('input[name="mediaType"]:checked').value;
       const labelCreator = document.getElementById('labelCreator');
@@ -666,64 +755,15 @@
       }
     }
 
-    // Form Submission
-    function handleFormSubmit(e) {
-      e.preventDefault();
-      const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
-      const title = document.getElementById('inputTitle').value.trim();
-      const creator = document.getElementById('inputCreator').value.trim();
-      const locator = document.getElementById('inputLocator').value.trim() || 'Unmarked';
-      const mood = document.getElementById('inputMood').value;
-      const quote = document.getElementById('inputQuote').value.trim();
-      const thought = document.getElementById('inputThought').value.trim();
-      const imageUrl = document.getElementById('inputImage').value.trim();
-
-      const tapes = ['washi-gingham-green', 'washi-kraft', 'washi-sage-solid'];
-      const tapeAngles = ['-2deg', '1.5deg', '-1deg', '2deg'];
-
-      const newEntry = {
-        id: "entry-" + Date.now(),
-        mediaType,
-        title,
-        creator,
-        locator,
-        mood,
-        quote,
-        thought,
-        imageUrl,
-        tapeType: tapes[Math.floor(Math.random() * tapes.length)],
-        tapeAngle: tapeAngles[Math.floor(Math.random() * tapeAngles.length)],
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      };
-
-      entries.unshift(newEntry);
-      persist();
-      closeNewEntryModal();
-    }
-
-    // Delete Item
-    function deleteEntry(id) {
-      if (confirm('Tear this scrap out of your journal?')) {
-        entries = entries.filter(e => e.id !== id);
-        persist();
-      }
-    }
-
-    // Escape HTML to prevent XSS
     function escapeHtml(str) {
       if (!str) return '';
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-      render();
-      updateDynamicIsland();
+      initAuth();
+      setupRealtimeListener();
       lucide.createIcons();
     });
   </script>
