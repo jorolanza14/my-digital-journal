@@ -80,7 +80,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Dynamic Island Spring Morph */
+    /* Spring-physics morphing for Dynamic Island */
     .dynamic-island {
       width: 330px;
       height: 44px;
@@ -104,6 +104,7 @@
       padding: 14px 18px;
     }
 
+    /* Internal contents cross-fade */
     .island-view {
       transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
                   transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -158,7 +159,7 @@
       <!-- Collapsed State -->
       <div id="islandCollapsed" class="island-view island-collapsed-content absolute inset-0 px-4 flex items-center justify-between">
         <div class="flex items-center gap-2.5 min-w-0">
-          <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" title="Checking status..."></div>
+          <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" title="Checking sync..."></div>
           <span class="text-xs font-medium tracking-wide text-sage-200 flex items-center gap-1.5 truncate">
             <span id="islandMediaBadge" class="text-[10px] bg-sage-700/60 text-sage-100 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0">Sync</span>
             <span id="islandTitle" class="truncate text-white">Connecting...</span>
@@ -211,9 +212,11 @@
   </header>
 
   <!-- ========================================================
-       MAIN PAGE
+       MAIN SCRAPBOOK PAGE CONTAINER
        ======================================================== -->
   <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28">
+    
+    <!-- Title Section -->
     <section class="relative mb-10 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
       <div>
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sage-100/80 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
@@ -228,6 +231,7 @@
         </p>
       </div>
 
+      <!-- Quick Action Button -->
       <div class="flex items-center gap-2.5">
         <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium">
           <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
@@ -236,7 +240,7 @@
       </div>
     </section>
 
-    <!-- Filters -->
+    <!-- Filter Pills (Paper index tabs) -->
     <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
       <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm">
         All Readings
@@ -252,7 +256,7 @@
       </button>
     </section>
 
-    <!-- Grid -->
+    <!-- SCRAPBOOK CARDS GRID -->
     <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"></div>
 
     <!-- Empty State -->
@@ -264,36 +268,33 @@
       <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded for this medium yet.</p>
       <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium">Add First Thought</button>
     </div>
+
   </main>
 
   <!-- ========================================================
-       MODAL: AUTH (6-DIGIT OTP FLOW)
+       MODAL: AUTH (DIRECT EMAIL & PASSWORD LOGIN)
        ======================================================== -->
   <div id="authModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
       <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
-        <i data-lucide="key" class="w-6 h-6"></i>
+        <i data-lucide="lock" class="w-6 h-6"></i>
       </div>
       <h3 class="text-xl font-serif text-forest mb-1">Sign In to Folio</h3>
-      <p class="text-xs text-fadedInk mb-5">Sync notes across your iPad & phone.</p>
+      <p class="text-xs text-fadedInk mb-5">Enter your credentials to sync across devices.</p>
       
-      <!-- Step 1: Request Code -->
-      <form id="stepEmail" onsubmit="handleSendOtp(event)" class="space-y-3">
-        <input type="email" id="authEmailInput" required placeholder="Enter your email" class="w-full px-3.5 py-2.5 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
-        <button type="submit" id="sendOtpBtn" class="w-full py-2.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
-          Send 6-Digit Code
+      <form onsubmit="handlePasswordLogin(event)" class="space-y-3 text-left">
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Email</label>
+          <input type="email" id="authEmailInput" required value="jorolanza14@gmail.com" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Password</label>
+          <input type="password" id="authPasswordInput" required placeholder="••••••••" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 mt-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
+          Sign In
         </button>
-      </form>
-
-      <!-- Step 2: Verify Code -->
-      <form id="stepToken" onsubmit="handleVerifyOtp(event)" class="space-y-3 hidden">
-        <p class="text-xs text-sage-700 font-medium">Code sent! Enter the 6 digits from your email:</p>
-        <input type="text" id="authOtpInput" maxlength="6" inputmode="numeric" pattern="[0-9]*" required placeholder="••••••" class="w-full px-3.5 py-2.5 text-center text-2xl tracking-[0.3em] font-mono bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
-        <button type="submit" id="verifyOtpBtn" class="w-full py-2.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">
-          Verify & Sign In
-        </button>
-        <button type="button" onclick="resetAuthSteps()" class="text-[11px] text-fadedInk hover:text-ink underline block mx-auto">Use a different email</button>
       </form>
 
       <button type="button" onclick="toggleAuthModal()" class="mt-4 text-xs text-fadedInk hover:text-ink underline block mx-auto">Close</button>
@@ -301,7 +302,7 @@
   </div>
 
   <!-- ========================================================
-       MODAL: ADD ENTRY
+       MODAL: ADD NEW SCRAPBOOK ENTRY
        ======================================================== -->
   <div id="entryModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden transform transition-all">
@@ -394,7 +395,7 @@
   </div>
 
   <!-- ========================================================
-       SUPABASE CLIENT LOGIC & OTP AUTHENTICATION
+       SUPABASE CLIENT LOGIC & REALTIME SYNC
        ======================================================== -->
   <script>
     // 1. SUPABASE CLIENT
@@ -405,7 +406,6 @@
 
     // State
     let currentUser = null;
-    let pendingEmail = '';
     let entries = [];
     let currentFilter = 'all';
     let islandOpen = false;
@@ -416,7 +416,7 @@
     const entryModal = document.getElementById('entryModal');
     const authModal = document.getElementById('authModal');
 
-    // Dynamic Island Controls
+    // Dynamic Island State Management
     function openIsland() { 
       islandOpen = true; 
       dynamicIsland.classList.add('is-expanded'); 
@@ -437,10 +437,12 @@
       toggleIsland();
     });
 
+    // Close on click/tap outside anywhere on the screen
     document.addEventListener('pointerdown', (e) => {
       if (islandOpen && !dynamicIsland.contains(e.target)) closeIsland();
     });
 
+    // Dismiss on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeIsland();
@@ -449,12 +451,12 @@
       }
     });
 
-    // Clean hash on startup if present
+    // Clear stale hash error tokens if any exist
     if (window.location.hash.includes('error=')) {
       history.replaceState(null, '', window.location.pathname);
     }
 
-    // 2. AUTHENTICATION (OTP 6-DIGIT FLOW)
+    // 2. AUTHENTICATION (PASSWORD LOGIN)
     async function initAuth() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       updateAuthState(session?.user || null);
@@ -501,62 +503,27 @@
       authModal.classList.toggle('flex');
     }
 
-    function resetAuthSteps() {
-      document.getElementById('stepEmail').classList.remove('hidden');
-      document.getElementById('stepToken').classList.add('hidden');
-      document.getElementById('authOtpInput').value = '';
-    }
-
-    // Send 6-digit code to email
-    async function handleSendOtp(e) {
+    async function handlePasswordLogin(e) {
       e.preventDefault();
       const email = document.getElementById('authEmailInput').value.trim();
-      const btn = document.getElementById('sendOtpBtn');
+      const password = document.getElementById('authPasswordInput').value;
+      const btn = document.getElementById('authSubmitBtn');
       btn.disabled = true;
-      btn.textContent = "Sending code...";
+      btn.textContent = "Signing in...";
 
-      const { error } = await supabaseClient.auth.signInWithOtp({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email,
-        options: {
-          shouldCreateUser: true
-        }
+        password: password
       });
 
       btn.disabled = false;
-      btn.textContent = "Send 6-Digit Code";
+      btn.textContent = "Sign In";
 
       if (error) {
-        alert("Error sending code: " + error.message);
-      } else {
-        pendingEmail = email;
-        document.getElementById('stepEmail').classList.add('hidden');
-        document.getElementById('stepToken').classList.remove('hidden');
-        document.getElementById('authOtpInput').focus();
-      }
-    }
-
-    // Verify 6-digit code
-    async function handleVerifyOtp(e) {
-      e.preventDefault();
-      const token = document.getElementById('authOtpInput').value.trim();
-      const btn = document.getElementById('verifyOtpBtn');
-      btn.disabled = true;
-      btn.textContent = "Verifying...";
-
-      const { data, error } = await supabaseClient.auth.verifyOtp({
-        email: pendingEmail,
-        token: token,
-        type: 'email'
-      });
-
-      btn.disabled = false;
-      btn.textContent = "Verify & Sign In";
-
-      if (error) {
-        alert("Invalid code: " + error.message);
+        alert("Sign-in failed: " + error.message);
       } else {
         toggleAuthModal();
-        resetAuthSteps();
+        document.getElementById('authPasswordInput').value = '';
       }
     }
 
