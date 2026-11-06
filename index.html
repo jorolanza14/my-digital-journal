@@ -212,10 +212,11 @@
 
   <!-- ========================================================
        BOTANICAL THEMED TOAST DIALOGUE BOX (z-[90])
+       Fixed: pointer-events-none by default so it never blocks clicks
        ======================================================== -->
   <div class="fixed top-24 left-0 right-0 z-[90] flex justify-center pointer-events-none px-4">
-    <div id="botanicalToast" class="pointer-events-auto transform -translate-y-12 opacity-0 flex items-center gap-3 px-5 py-3 rounded-xl paper-shadow border max-w-md w-full bg-parchment text-ink select-none relative overflow-hidden transition-all duration-300">
-      <div id="toastWashi" class="absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm"></div>
+    <div id="botanicalToast" class="pointer-events-none transform -translate-y-12 opacity-0 flex items-center gap-3 px-5 py-3 rounded-xl paper-shadow border max-w-md w-full bg-parchment text-ink select-none relative overflow-hidden transition-all duration-300">
+      <div id="toastWashi" class="absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm pointer-events-none"></div>
       <div id="toastIconBox" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-sage-100 text-forest">
         <i id="toastIcon" data-lucide="check" class="w-4 h-4"></i>
       </div>
@@ -223,7 +224,7 @@
         <h4 id="toastTitle" class="text-xs font-semibold text-forest uppercase tracking-wider">Saved</h4>
         <p id="toastMessage" class="text-xs text-fadedInk mt-0.5 leading-snug"></p>
       </div>
-      <button onclick="hideToast()" class="text-fadedInk hover:text-ink p-1">
+      <button onclick="hideToast()" class="text-fadedInk hover:text-ink p-1 cursor-pointer">
         <i data-lucide="x" class="w-3.5 h-3.5"></i>
       </button>
     </div>
@@ -378,7 +379,7 @@
           <p id="activeFolderMeta" class="text-xs text-fadedInk"></p>
         </div>
       </div>
-      <button onclick="selectCollection(null)" class="text-xs font-medium text-sage-700 hover:text-forest underline p-1">
+      <button onclick="selectCollection(null)" class="text-xs font-medium text-sage-700 hover:text-forest underline p-1 cursor-pointer">
         Exit Folder
       </button>
     </div>
@@ -398,37 +399,47 @@
   </main>
 
   <!-- ========================================================
-       MODAL: INSPECT ENTRY (CLOSE-UP VIEW - TIER 1 MODAL z-50)
+       MODAL: INSPECT ENTRY (TIER 1 MODAL z-50)
        ======================================================== -->
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
       
-      <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-36 h-7 washi-gingham-green rounded-sm z-20 rotate-1"></div>
+      <!-- Washi tape at top of inspect card (pointer-events-none added) -->
+      <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-36 h-7 washi-gingham-green rounded-sm z-20 rotate-1 pointer-events-none"></div>
 
       <!-- Inspection Header -->
-      <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 flex items-center justify-between flex-shrink-0 bg-parchment">
+      <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 flex items-center justify-between flex-shrink-0 bg-parchment relative z-10">
         <div class="flex items-center gap-2 flex-wrap">
           <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
           
-          <!-- Binder Folder Move Badge Button -->
-          <button id="inspectFolderMoveBtn" onclick="openMoveScrapFromInspect()" class="text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/70 bg-white/70 hover:bg-white text-forest transition flex items-center gap-1.5 cursor-pointer shadow-sm hover:border-sage-500" title="Move to a binder folder">
-            <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700"></i>
-            <span id="inspectFolderMoveName">Unassigned</span>
+          <!-- Binder Folder Move Button (High-Priority Click Target) -->
+          <button 
+            type="button"
+            id="inspectFolderMoveBtn" 
+            onclick="openMoveScrapFromInspect(event)" 
+            class="relative z-30 text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/70 bg-white/80 hover:bg-white text-forest transition flex items-center gap-1.5 cursor-pointer shadow-sm hover:border-sage-500 active:scale-95" 
+            title="Move to a binder folder">
+            <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700 pointer-events-none"></i>
+            <span id="inspectFolderMoveName" class="pointer-events-none">Assign Binder</span>
           </button>
 
-          <button id="inspectSensitiveToggleBtn" onclick="toggleExistingEntrySensitive()" class="text-xs font-medium px-2.5 py-1 rounded-md border transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-            <span id="inspectSensitiveToggleIcon">🔞</span>
-            <span id="inspectSensitiveToggleText">Mark as 18+</span>
+          <button 
+            type="button"
+            id="inspectSensitiveToggleBtn" 
+            onclick="toggleExistingEntrySensitive()" 
+            class="relative z-30 text-xs font-medium px-2.5 py-1 rounded-md border transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
+            <span id="inspectSensitiveToggleIcon" class="pointer-events-none">🔞</span>
+            <span id="inspectSensitiveToggleText" class="pointer-events-none">Mark as 18+</span>
           </button>
 
           <span id="inspectDate" class="text-xs font-mono text-fadedInk"></span>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="inspectCopyBtn" onclick="copyInspectQuote()" class="p-2 rounded-full bg-white/70 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40" title="Copy excerpt">
-            <i data-lucide="copy" class="w-4 h-4"></i>
+        <div class="flex items-center gap-2 relative z-30">
+          <button id="inspectCopyBtn" onclick="copyInspectQuote()" class="p-2 rounded-full bg-white/70 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40 cursor-pointer" title="Copy excerpt">
+            <i data-lucide="copy" class="w-4 h-4 pointer-events-none"></i>
           </button>
-          <button onclick="closeInspectModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
-            <i data-lucide="x" class="w-4 h-4"></i>
+          <button onclick="closeInspectModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition cursor-pointer">
+            <i data-lucide="x" class="w-4 h-4 pointer-events-none"></i>
           </button>
         </div>
       </div>
@@ -468,8 +479,8 @@
           <div id="inspectThoughtEdit" class="hidden space-y-3">
             <textarea id="inspectThoughtInput" rows="4" class="w-full px-4 py-3 text-sm font-sans bg-white border border-kraftDark rounded-xl focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
             <div class="flex justify-end gap-2">
-              <button onclick="toggleInspectEdit()" class="px-3 py-1.5 text-xs text-fadedInk hover:text-ink">Cancel</button>
-              <button onclick="saveInspectEdit()" class="px-4 py-1.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm">Save Changes</button>
+              <button onclick="toggleInspectEdit()" class="px-3 py-1.5 text-xs text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
+              <button onclick="saveInspectEdit()" class="px-4 py-1.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">Save Changes</button>
             </div>
           </div>
         </div>
@@ -487,11 +498,11 @@
   </div>
 
   <!-- ========================================================
-       MODAL: MOVE SCRAP TO BINDER (TIER 2 SUB-MODAL z-[70] - FLOATS IN FRONT)
+       MODAL: MOVE SCRAP TO BINDER (TIER 2 SUB-MODAL z-[70])
        ======================================================== -->
   <div id="moveScrapModal" class="apple-modal-backdrop fixed inset-0 z-[70] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/60 p-6 shadow-2xl">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1 pointer-events-none"></div>
 
       <div class="flex items-center justify-between mb-3 border-b border-kraftDark/40 pb-3">
         <div class="flex items-center gap-2">
@@ -503,7 +514,7 @@
             <p id="moveScrapModalSub" class="text-[10px] text-fadedInk truncate max-w-[190px]">Select a destination folder</p>
           </div>
         </div>
-        <button onclick="closeMoveScrapModal()" class="w-7 h-7 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
+        <button onclick="closeMoveScrapModal()" class="w-7 h-7 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition cursor-pointer">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
       </div>
@@ -512,11 +523,11 @@
       <div id="moveScrapList" class="space-y-1.5 max-h-56 overflow-y-auto no-scrollbar py-1"></div>
 
       <div class="mt-4 pt-3 border-t border-kraftDark/40 flex items-center justify-between">
-        <button onclick="openFolderModal(); closeMoveScrapModal();" class="text-xs text-sage-700 hover:text-forest font-medium flex items-center gap-1">
+        <button onclick="openFolderModal(); closeMoveScrapModal();" class="text-xs text-sage-700 hover:text-forest font-medium flex items-center gap-1 cursor-pointer">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
           <span>+ Create New Binder</span>
         </button>
-        <button onclick="closeMoveScrapModal()" class="text-xs text-fadedInk hover:text-ink">Cancel</button>
+        <button onclick="closeMoveScrapModal()" class="text-xs text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
       </div>
     </div>
   </div>
@@ -526,7 +537,7 @@
        ======================================================== -->
   <div id="folderModal" class="apple-modal-backdrop fixed inset-0 z-[75] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/60 p-6 shadow-2xl">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-kraft rounded-sm rotate-1"></div>
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-kraft rounded-sm rotate-1 pointer-events-none"></div>
       
       <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
         <i data-lucide="folder-plus" class="w-6 h-6"></i>
@@ -548,7 +559,7 @@
 
         <div>
           <label class="block text-[11px] font-medium text-fadedInk mb-1">Medium</label>
-          <select id="inputFolderType" class="w-full px-3 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+          <select id="inputFolderType" class="w-full px-3 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink cursor-pointer">
             <option value="manga">📑 Manga / Manhwa</option>
             <option value="book">📖 Physical Book</option>
             <option value="anime">🎬 Anime</option>
@@ -556,8 +567,8 @@
         </div>
 
         <div class="pt-2 flex items-center justify-end gap-2 border-t border-kraftDark/30">
-          <button type="button" onclick="closeFolderModal()" class="px-3.5 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
-          <button type="submit" id="saveFolderBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Create Binder</button>
+          <button type="button" onclick="closeFolderModal()" class="px-3.5 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
+          <button type="submit" id="saveFolderBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">Create Binder</button>
         </div>
       </form>
     </div>
@@ -568,7 +579,7 @@
        ======================================================== -->
   <div id="authModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1 pointer-events-none"></div>
       
       <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
         <i data-lucide="lock" class="w-6 h-6"></i>
@@ -608,7 +619,7 @@
        ======================================================== -->
   <div id="confirmModal" class="apple-modal-backdrop fixed inset-0 z-[80] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center shadow-2xl">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-5 washi-kraft rounded-sm rotate-2"></div>
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-5 washi-kraft rounded-sm rotate-2 pointer-events-none"></div>
       <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-red-100/70 flex items-center justify-center text-red-700">
         <i data-lucide="trash-2" class="w-5 h-5"></i>
       </div>
@@ -626,7 +637,7 @@
        ======================================================== -->
   <div id="entryModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 washi-gingham-green rounded-sm z-10 rotate-1"></div>
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 washi-gingham-green rounded-sm z-10 rotate-1 pointer-events-none"></div>
 
       <div class="px-6 pt-7 pb-4 border-b border-kraftDark/30 flex items-center justify-between">
         <div>
@@ -643,11 +654,11 @@
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="block text-xs font-semibold uppercase tracking-wider text-fadedInk">Story Binder / Series</label>
-            <button type="button" onclick="openFolderModal(); closeNewEntryModal();" class="text-xs text-sage-700 hover:text-forest underline font-medium">
+            <button type="button" onclick="openFolderModal(); closeNewEntryModal();" class="text-xs text-sage-700 hover:text-forest underline font-medium cursor-pointer">
               + New Binder
             </button>
           </div>
-          <select id="inputCollectionId" onchange="handleCollectionSelectInForm(this.value)" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+          <select id="inputCollectionId" onchange="handleCollectionSelectInForm(this.value)" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink cursor-pointer">
             <option value="">📂 Standalone / No Folder</option>
           </select>
         </div>
@@ -732,7 +743,7 @@
             </label>
             <div id="imagePreviewBox" class="hidden relative w-12 h-12 rounded-lg overflow-hidden border border-kraftDark flex-shrink-0">
               <img id="imagePreview" src="" class="w-full h-full object-cover">
-              <button type="button" onclick="clearSelectedFile()" class="absolute inset-0 bg-forest/60 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition">
+              <button type="button" onclick="clearSelectedFile()" class="absolute inset-0 bg-forest/60 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition cursor-pointer">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
               </button>
             </div>
@@ -809,7 +820,7 @@
     const inspectModal = document.getElementById('inspectModal');
     const moveScrapModal = document.getElementById('moveScrapModal');
 
-    // TOAST SYSTEM
+    // TOAST SYSTEM (Fixed: pointer-events are only enabled while toast is active)
     function showToast(title, message, type = 'success') {
       const toast = document.getElementById('botanicalToast');
       const toastTitle = document.getElementById('toastTitle');
@@ -825,18 +836,18 @@
         toastTitle.className = "text-xs font-semibold text-rose-800 uppercase tracking-wider";
         toastIconBox.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-rose-100 text-rose-700";
         toastIcon.setAttribute('data-lucide', 'alert-circle');
-        toastWashi.className = "absolute -top-2 left-8 w-20 h-4 washi-kraft rounded-sm";
+        toastWashi.className = "absolute -top-2 left-8 w-20 h-4 washi-kraft rounded-sm pointer-events-none";
       } else {
         toastTitle.className = "text-xs font-semibold text-forest uppercase tracking-wider";
         toastIconBox.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-sage-100 text-forest";
         toastIcon.setAttribute('data-lucide', 'check');
-        toastWashi.className = "absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm";
+        toastWashi.className = "absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm pointer-events-none";
       }
 
       lucide.createIcons();
 
-      toast.classList.remove('-translate-y-12', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
+      toast.classList.remove('-translate-y-12', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
 
       if (toastTimeout) clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => hideToast(), 4000);
@@ -844,8 +855,8 @@
 
     function hideToast() {
       const toast = document.getElementById('botanicalToast');
-      toast.classList.add('-translate-y-12', 'opacity-0');
-      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('-translate-y-12', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
     }
 
     // DYNAMIC ISLAND CONTEXT SYSTEM
@@ -1001,7 +1012,10 @@
 
     // MOVE TO BINDER FEATURE
     function openMoveScrapModal(entryId, e) {
-      if (e) e.stopPropagation();
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
       movingEntryId = entryId;
       const entry = entries.find(x => x.id === entryId);
       document.getElementById('moveScrapModalSub').textContent = entry ? `Moving "${entry.title}"` : 'Select a destination folder';
@@ -1050,9 +1064,13 @@
       movingEntryId = null;
     }
 
-    function openMoveScrapFromInspect() {
+    function openMoveScrapFromInspect(e) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
       if (!inspectingEntry) return;
-      openMoveScrapModal(inspectingEntry.id);
+      openMoveScrapModal(inspectingEntry.id, e);
     }
 
     async function executeMoveScrap(destinationColId) {
@@ -1087,9 +1105,9 @@
       const btnName = document.getElementById('inspectFolderMoveName');
       if (colId) {
         const col = collections.find(c => c.id === colId);
-        btnName.textContent = col ? `📁 ${col.title}` : '📁 Binder';
+        btnName.textContent = col ? col.title : 'Binder';
       } else {
-        btnName.textContent = '📂 Assign Binder';
+        btnName.textContent = 'Assign Binder';
       }
     }
 
@@ -1134,7 +1152,13 @@
         closeFolderModal();
         await loadCollectionsFromCloud();
         showToast("Binder Created", `Folder "${title}" is ready.`, "success");
-        if (data && data[0]) selectCollection(data[0].id);
+        if (data && data[0]) {
+          if (inspectingEntry) {
+            executeMoveScrap(data[0].id);
+          } else {
+            selectCollection(data[0].id);
+          }
+        }
       }
     }
 
@@ -1216,7 +1240,7 @@
           </div>
         `;
       }).join('') + `
-        <button onclick="openFolderModal()" class="flex-shrink-0 w-9 h-9 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-fadedInk hover:text-forest flex items-center justify-center transition" title="Add another folder">
+        <button onclick="openFolderModal()" class="flex-shrink-0 w-9 h-9 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-fadedInk hover:text-forest flex items-center justify-center transition cursor-pointer" title="Add another folder">
           <i data-lucide="plus" class="w-4 h-4"></i>
         </button>
       `;
@@ -1281,11 +1305,11 @@
       const text = document.getElementById('inspectSensitiveToggleText');
 
       if (isSens) {
-        btn.className = "text-xs font-semibold px-2.5 py-1 rounded-md border border-rose-300 bg-rose-50 text-rose-800 transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+        btn.className = "relative z-30 text-xs font-semibold px-2.5 py-1 rounded-md border border-rose-300 bg-rose-50 text-rose-800 transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95";
         icon.textContent = "🔞";
         text.textContent = "18+ Discreet (Click to Unmark)";
       } else {
-        btn.className = "text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/60 bg-white/70 hover:bg-white text-fadedInk hover:text-ink transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+        btn.className = "relative z-30 text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/60 bg-white/70 hover:bg-white text-fadedInk hover:text-ink transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95";
         icon.textContent = "🛡️";
         text.textContent = "Mark as 18+";
       }
@@ -1794,7 +1818,7 @@
             onmouseleave="handleScrapLeave()" 
             class="relative bg-white/95 rounded-2xl p-6 paper-shadow border border-kraftDark/40 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 transform ${rot} group cursor-pointer select-none">
             
-            <div class="absolute -top-3.5 left-10 w-28 h-6 ${tapeClass} rounded-sm z-20" style="transform: rotate(${entry.tape_angle || '-1deg'})"></div>
+            <div class="absolute -top-3.5 left-10 w-28 h-6 ${tapeClass} rounded-sm z-20 pointer-events-none" style="transform: rotate(${entry.tape_angle || '-1deg'})"></div>
             
             <div class="flex items-center justify-between pt-1 mb-3 text-xs text-fadedInk">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -1858,16 +1882,16 @@
               </span>
               
               <div class="flex items-center gap-2">
-                <button onclick="openMoveScrapModal('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-forest transition-opacity p-1 cursor-pointer" title="Move to a binder">
-                  <i data-lucide="folder-input" class="w-4 h-4"></i>
+                <button type="button" onclick="openMoveScrapModal('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-forest transition-opacity p-1 cursor-pointer" title="Move to a binder">
+                  <i data-lucide="folder-input" class="w-4 h-4 pointer-events-none"></i>
                 </button>
 
-                <button onclick="toggleCardSensitive('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
-                  <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 ${isSensitive ? 'text-rose-700' : ''}"></i>
+                <button type="button" onclick="toggleCardSensitive('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
+                  <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 pointer-events-none ${isSensitive ? 'text-rose-700' : ''}"></i>
                 </button>
 
-                <button onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
-                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <button type="button" onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
+                  <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
                 </button>
               </div>
             </div>
