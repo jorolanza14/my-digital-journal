@@ -1,33 +1,1789 @@
--- 1. Create Folders / Collections table
-create table if not exists collections (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users not null default auth.uid(),
-  title text not null,
-  creator text default '',
-  media_type text not null check (media_type in ('book', 'manga', 'anime')),
-  cover_url text default '',
-  created_at timestamptz default now()
-);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Folio — Aesthetic Botanical Scrapbook Journal</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
--- Enable RLS for collections
-alter table collections enable row level security;
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-drop policy if exists "Users can manage own collections" on collections;
-create policy "Users can manage own collections" 
-  on collections for all 
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: '#F6F3EB',
+            parchmentDark: '#EDE8DC',
+            sage: {
+              50: '#F4F7F4',
+              100: '#E4EDE3',
+              200: '#CADAC8',
+              300: '#A7C1A5',
+              500: '#60855E',
+              700: '#3F593E',
+              900: '#233423',
+            },
+            forest: '#263426',
+            kraft: '#E3D7C5',
+            kraftDark: '#D4C4AE',
+            ink: '#2B2B28',
+            fadedInk: '#6B685F'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+            reader: ['"Newsreader"', 'serif'],
+            hand: ['"Caveat"', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
 
--- Realtime for collections
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables 
-    where pubname = 'supabase_realtime' and tablename = 'collections'
-  ) then
-    alter publication supabase_realtime add table collections;
-  end if;
-end $$;
+  <style>
+    .bg-dot-grid {
+      background-color: #F7F4EC;
+      background-image: radial-gradient(#C8C1AE 1.2px, transparent 1.2px);
+      background-size: 20px 20px;
+    }
 
--- 2. Link entries to collections
-alter table entries add column if not exists collection_id uuid references collections(id) on delete set null;
+    .washi-gingham-green {
+      background-color: rgba(167, 193, 165, 0.75);
+      background-image: 
+        linear-gradient(90deg, rgba(255,255,255,.4) 50%, transparent 50%),
+        linear-gradient(rgba(255,255,255,.4) 50%, transparent 50%);
+      background-size: 10px 10px;
+      backdrop-filter: blur(1.5px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .washi-kraft {
+      background-color: rgba(227, 215, 197, 0.85);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(200, 180, 155, 0.3) 6px, rgba(200, 180, 155, 0.3) 12px);
+      backdrop-filter: blur(1px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .washi-sage-solid {
+      background-color: rgba(138, 168, 137, 0.7);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* Dynamic Island */
+    .dynamic-island {
+      width: 370px;
+      height: 48px;
+      border-radius: 9999px;
+      background-color: #243324;
+      border: 1px solid rgba(167, 193, 165, 0.35);
+      box-shadow: 0 16px 36px -4px rgba(18, 28, 18, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-radius 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.25s ease,
+                  box-shadow 0.25s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (min-width: 768px) {
+      .dynamic-island {
+        width: 470px;
+        height: 52px;
+      }
+    }
+
+    .dynamic-island.is-expanded {
+      width: min(620px, calc(100vw - 28px)) !important;
+      height: 244px !important;
+      border-radius: 28px !important;
+    }
+
+    .dynamic-island.is-highlighted {
+      border-color: rgba(167, 193, 165, 0.85);
+      box-shadow: 0 18px 40px -4px rgba(45, 75, 45, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    }
+
+    .island-layer-collapsed {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.2s ease, visibility 0.2s;
+    }
+
+    .dynamic-island.is-expanded .island-layer-collapsed {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .island-layer-expanded {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                  visibility 0.25s;
+    }
+
+    .dynamic-island.is-expanded .island-layer-expanded {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+      transition-delay: 0.05s;
+    }
+
+    .island-text-anim {
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .island-text-anim.is-swapping {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    /* Apple-Style Smooth Modal Spring Transitions */
+    .apple-modal-backdrop {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+    }
+
+    .apple-modal-backdrop.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .apple-modal-card {
+      opacity: 0;
+      transform: scale(0.94) translateY(24px);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+      will-change: transform, opacity;
+    }
+
+    .apple-modal-backdrop.is-active .apple-modal-card {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    .paper-shadow {
+      box-shadow: 2px 4px 14px rgba(45, 41, 35, 0.08), 0 1px 3px rgba(45, 41, 35, 0.04);
+    }
+    
+    .polaroid-shadow {
+      box-shadow: 0 6px 16px rgba(35, 30, 25, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Discreet Public Blur Filters */
+    .discreet-blur-active .sensitive-content {
+      filter: blur(28px) grayscale(60%);
+      transform: scale(1.05);
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+
+    .discreet-blur-active .sensitive-wrapper:hover .sensitive-content {
+      filter: blur(0px) grayscale(0%);
+      transform: scale(1);
+    }
+
+    #botanicalToast {
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest pb-24 discreet-blur-active">
+
+  <!-- ========================================================
+       BOTANICAL THEMED TOAST DIALOGUE BOX
+       ======================================================== -->
+  <div class="fixed top-24 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+    <div id="botanicalToast" class="pointer-events-auto transform -translate-y-12 opacity-0 flex items-center gap-3 px-5 py-3 rounded-xl paper-shadow border max-w-md w-full bg-parchment text-ink select-none relative overflow-hidden transition-all duration-300">
+      <div id="toastWashi" class="absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm"></div>
+      <div id="toastIconBox" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-sage-100 text-forest">
+        <i id="toastIcon" data-lucide="check" class="w-4 h-4"></i>
+      </div>
+      <div class="flex-1 min-w-0 pr-2">
+        <h4 id="toastTitle" class="text-xs font-semibold text-forest uppercase tracking-wider">Saved</h4>
+        <p id="toastMessage" class="text-xs text-fadedInk mt-0.5 leading-snug"></p>
+      </div>
+      <button onclick="hideToast()" class="text-fadedInk hover:text-ink p-1">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       DYNAMIC ISLAND
+       ======================================================== -->
+  <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
+    <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
+      
+      <!-- COLLAPSED LAYER -->
+      <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-4 md:px-5 flex items-center justify-between">
+        <div id="islandTriggerArea" class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer py-2 group" title="Click to open journal control center">
+          <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform" title="Checking sync..."></div>
+          <span class="text-xs md:text-sm font-medium tracking-wide text-sage-200 flex items-center gap-2 truncate">
+            <span id="islandMediaBadge" class="island-text-anim text-[10px] md:text-[11px] bg-sage-700/70 text-sage-100 px-2.5 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0 font-semibold">Sync</span>
+            <span id="islandTitle" class="island-text-anim truncate text-white font-medium">Connecting...</span>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-2.5 pl-3 border-l border-sage-700/60 flex-shrink-0">
+          <span class="island-text-anim text-xs font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
+
+          <button id="quickShieldBtn" onclick="togglePublicMode(event)" class="w-8 h-8 rounded-full bg-sage-800/80 hover:bg-sage-700 text-sage-300 flex items-center justify-center transition active:scale-90 cursor-pointer" title="Toggle Public Mode (Blur 18+)">
+            <i id="shieldIcon" data-lucide="eye-off" class="w-4 h-4 text-emerald-400"></i>
+          </button>
+
+          <button id="quickAddBtn" class="w-8 h-8 md:w-9 md:h-9 bg-sage-500 hover:bg-sage-400 text-forest rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm hover:shadow-md" title="Quick Thought">
+            <i data-lucide="plus" class="w-4 h-4 md:w-5 md:h-5 text-white"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- EXPANDED LAYER -->
+      <div id="islandExpanded" class="island-layer-expanded flex flex-col justify-between h-full w-full p-5">
+        <div class="flex items-center justify-between border-b border-sage-700/60 pb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-sage-700/80 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="sparkles" class="w-4 h-4 text-sage-300"></i>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-white leading-tight" id="authStatusText">Folio Cloud Sync</p>
+              <p class="text-xs text-sage-300 truncate max-w-[210px] md:max-w-xs mt-0.5" id="authUserEmail">Connecting to Supabase...</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="authBtn" class="text-xs bg-sage-800 hover:bg-sage-700 text-sage-100 px-3.5 py-1.5 rounded-full border border-sage-600/50 font-mono transition cursor-pointer active:scale-95">
+              Sign In
+            </button>
+            <button onclick="closeIsland()" class="w-7 h-7 rounded-full bg-sage-800/80 hover:bg-sage-700 text-sage-300 flex items-center justify-center cursor-pointer transition">
+              <i data-lucide="chevron-up" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 my-1">
+          <button onclick="setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
+          <button onclick="setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
+          <button onclick="setFilter('manga'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📑 Manga</button>
+          <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
+          <button onclick="togglePublicMode(event)" class="text-xs text-sage-300 hover:text-white flex items-center gap-1.5 cursor-pointer font-sans">
+            <span id="publicShieldLabel" class="flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Public Mode: <b>Active</b></span>
+            </span>
+          </button>
+          
+          <button id="islandWriteBtn" class="text-xs font-semibold bg-sage-300 hover:bg-sage-200 text-forest px-4 py-2 rounded-full font-sans transition flex items-center gap-2 shadow-sm cursor-pointer active:scale-95">
+            <i data-lucide="feather" class="w-4 h-4"></i>
+            <span>Write New Thought</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================
+       MAIN SCRAPBOOK PAGE CONTAINER
+       ======================================================== -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32">
+    <section class="relative mb-8 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-100/90 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
+          <i data-lucide="leaf" class="w-3.5 h-3.5"></i>
+          <span>Leaves & Marginalia</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif text-forest tracking-tight">
+          Unsaid Thoughts.
+        </h1>
+        <p class="font-hand text-xl sm:text-2xl text-sage-700 mt-1 transform -rotate-1">
+          Reflections from the books, panels & scenes that linger.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button onclick="openFolderModal()" class="px-4 py-2.5 bg-parchmentDark hover:bg-kraft text-forest border border-kraftDark rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer" title="Create a new binder folder">
+          <i data-lucide="folder-plus" class="w-4 h-4 text-sage-700"></i>
+          <span>New Binder</span>
+        </button>
+
+        <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer">
+          <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
+          <span>Add New Scrap</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- BINDER FOLDERS SHELF (ALL STORIES IN ONE PLACE) -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <span class="text-xs font-semibold uppercase tracking-wider text-fadedInk flex items-center gap-1.5">
+          <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700"></i>
+          <span>Story Binders & Series</span>
+        </span>
+        <button id="clearFolderFilterBtn" onclick="selectCollection(null)" class="hidden text-xs text-sage-700 hover:text-forest underline font-medium">
+          Show All Scraps (Exit Binder)
+        </button>
+      </div>
+
+      <div id="foldersShelf" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2"></div>
+    </section>
+
+    <!-- Filters -->
+    <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
+      <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer">
+        All Readings
+      </button>
+      <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
+        📖 Physical Books
+      </button>
+      <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
+        📑 Manga & Manhwa
+      </button>
+      <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
+        🎬 Anime
+      </button>
+    </section>
+
+    <!-- Active Binder Banner (Shows when inside a specific folder) -->
+    <div id="activeFolderBanner" class="hidden mb-6 p-4 rounded-2xl bg-sage-100/70 border border-sage-200/80 items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-forest text-parchment flex items-center justify-center font-serif text-lg">
+          📁
+        </div>
+        <div>
+          <h3 id="activeFolderTitle" class="font-serif text-lg text-forest font-semibold leading-tight"></h3>
+          <p id="activeFolderMeta" class="text-xs text-fadedInk"></p>
+        </div>
+      </div>
+      <button onclick="selectCollection(null)" class="text-xs font-medium text-sage-700 hover:text-forest underline p-1">
+        Exit Folder
+      </button>
+    </div>
+
+    <!-- SCRAPBOOK CARDS GRID -->
+    <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"></div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-20 px-4">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-sage-100 flex items-center justify-center text-sage-500">
+        <i data-lucide="book-open" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-xl font-serif text-forest">A clean, blank page</h3>
+      <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded here yet.</p>
+      <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium cursor-pointer">Add First Thought</button>
+    </div>
+  </main>
+
+  <!-- ========================================================
+       MODAL: CREATE NEW STORY BINDER FOLDER
+       ======================================================== -->
+  <div id="folderModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-kraft rounded-sm rotate-1"></div>
+      
+      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
+        <i data-lucide="folder-plus" class="w-6 h-6"></i>
+      </div>
+      
+      <h3 class="text-xl font-serif text-forest text-center mb-1">New Story Binder</h3>
+      <p class="text-xs text-fadedInk text-center mb-5">Group all scraps from a manga, manhwa, or book together.</p>
+      
+      <form onsubmit="handleCreateCollection(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Title / Series</label>
+          <input type="text" id="inputFolderTitle" required placeholder="e.g., Unsleep or Norwegian Wood" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Author / Creator</label>
+          <input type="text" id="inputFolderCreator" placeholder="e.g., hyeonoe" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Medium</label>
+          <select id="inputFolderType" class="w-full px-3 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+            <option value="manga">📑 Manga / Manhwa</option>
+            <option value="book">📖 Physical Book</option>
+            <option value="anime">🎬 Anime</option>
+          </select>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-kraftDark/30">
+          <button type="button" onclick="closeFolderModal()" class="px-3.5 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
+          <button type="submit" id="saveFolderBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Create Binder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: INSPECT ENTRY (CLOSE-UP VIEW WITH 18+ TOGGLE)
+       ======================================================== -->
+  <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
+      
+      <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-36 h-7 washi-gingham-green rounded-sm z-20 rotate-1"></div>
+
+      <!-- Inspection Header -->
+      <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 flex items-center justify-between flex-shrink-0 bg-parchment">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
+          
+          <button id="inspectSensitiveToggleBtn" onclick="toggleExistingEntrySensitive()" class="text-xs font-medium px-2.5 py-1 rounded-md border transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+            <span id="inspectSensitiveToggleIcon">🔞</span>
+            <span id="inspectSensitiveToggleText">Mark as 18+</span>
+          </button>
+
+          <span id="inspectDate" class="text-xs font-mono text-fadedInk"></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="inspectCopyBtn" onclick="copyInspectQuote()" class="p-2 rounded-full bg-white/70 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40" title="Copy excerpt">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeInspectModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Inspection Scrollable Body -->
+      <div class="p-6 sm:p-8 space-y-6 overflow-y-auto no-scrollbar">
+        <div>
+          <h2 id="inspectTitle" class="text-2xl sm:text-3xl font-serif text-forest leading-snug"></h2>
+          <p class="text-sm text-fadedInk mt-1"><span id="inspectCreator"></span> • <span id="inspectLocator" class="font-reader italic text-sage-700 font-medium"></span></p>
+        </div>
+
+        <div id="inspectImageBox" class="hidden">
+          <div class="p-3 bg-white rounded-2xl polaroid-shadow border border-kraftDark/40 inline-block w-full text-center">
+            <img id="inspectImage" src="" alt="Panel fragment" class="rounded-xl mx-auto max-h-[60vh] object-contain w-full" loading="lazy">
+            <p class="font-hand text-right text-xs text-fadedInk pt-2 pr-1">recorded fragment • full perspective</p>
+          </div>
+        </div>
+
+        <div id="inspectQuoteBox" class="relative bg-white/80 p-5 rounded-2xl border-l-4 border-sage-500 paper-shadow">
+          <p id="inspectQuote" class="font-reader italic text-forest text-base sm:text-lg leading-relaxed"></p>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs uppercase tracking-wider font-semibold text-sage-800 flex items-center gap-1.5">
+              <i data-lucide="feather" class="w-3.5 h-3.5"></i>
+              <span>Unsaid Reflection</span>
+            </p>
+            <button id="inspectEditBtn" onclick="toggleInspectEdit()" class="text-xs text-sage-700 hover:text-forest underline font-medium cursor-pointer">
+              Edit Reflection
+            </button>
+          </div>
+
+          <div id="inspectThoughtView" class="font-sans text-sm sm:text-base text-ink leading-relaxed bg-kraft/20 p-5 rounded-2xl border border-kraftDark/30">
+          </div>
+
+          <div id="inspectThoughtEdit" class="hidden space-y-3">
+            <textarea id="inspectThoughtInput" rows="4" class="w-full px-4 py-3 text-sm font-sans bg-white border border-kraftDark rounded-xl focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
+            <div class="flex justify-end gap-2">
+              <button onclick="toggleInspectEdit()" class="px-3 py-1.5 text-xs text-fadedInk hover:text-ink">Cancel</button>
+              <button onclick="saveInspectEdit()" class="px-4 py-1.5 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm">Save Changes</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-kraftDark/40 flex items-center justify-between text-xs">
+          <span class="font-hand text-lg text-sage-700">Tone: <span id="inspectMood" class="font-semibold capitalize"></span></span>
+          <button id="inspectDeleteBtn" onclick="deleteFromInspect()" class="text-xs text-rose-700 hover:text-rose-900 font-medium flex items-center gap-1 cursor-pointer">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Tear Scrap</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: AUTH
+       ======================================================== -->
+  <div id="authModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
+      
+      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
+        <i data-lucide="lock" class="w-6 h-6"></i>
+      </div>
+      
+      <h3 id="authModalHeader" class="text-xl font-serif text-forest mb-1">Sign In to Folio</h3>
+      <p id="authModalSub" class="text-xs text-fadedInk mb-5">Enter your account to sync across devices.</p>
+      
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-3 text-left">
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Email</label>
+          <input type="email" id="authEmailInput" required placeholder="your.email@example.com" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Password</label>
+          <input type="password" id="authPasswordInput" required placeholder="••••••••" minlength="6" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+        
+        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 mt-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-4 pt-3 border-t border-kraftDark/40 flex items-center justify-between text-[11px]">
+        <button type="button" id="authModeToggleBtn" onclick="toggleAuthMode()" class="text-sage-700 hover:text-forest underline font-medium cursor-pointer">
+          Need an account? Sign Up
+        </button>
+        <button type="button" onclick="closeAuthModal()" class="text-fadedInk hover:text-ink cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: CONFIRMATION
+       ======================================================== -->
+  <div id="confirmModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-5 washi-kraft rounded-sm rotate-2"></div>
+      <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-red-100/70 flex items-center justify-center text-red-700">
+        <i data-lucide="trash-2" class="w-5 h-5"></i>
+      </div>
+      <h3 class="text-base font-serif text-forest mb-1">Tear Out Page?</h3>
+      <p class="text-xs text-fadedInk mb-4">This unsaid thought will be permanently discarded from your journal.</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeConfirmModal()" class="px-3 py-2 text-xs font-medium rounded-lg bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink transition cursor-pointer">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-700 hover:bg-red-800 text-white transition active:scale-95 cursor-pointer">Tear Page</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: ADD ENTRY (WITH FOLDER SELECTION)
+       ======================================================== -->
+  <div id="entryModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 washi-gingham-green rounded-sm z-10 rotate-1"></div>
+
+      <div class="px-6 pt-7 pb-4 border-b border-kraftDark/30 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-serif text-forest">Capture Unsaid Thought</h3>
+          <p class="font-hand text-base text-sage-700">What quote or moment won't leave your head?</p>
+        </div>
+        <button onclick="closeNewEntryModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="entryForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto no-scrollbar">
+        
+        <!-- FOLDER / BINDER SELECTOR -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-fadedInk">Story Binder / Series</label>
+            <button type="button" onclick="openFolderModal(); closeNewEntryModal();" class="text-xs text-sage-700 hover:text-forest underline font-medium">
+              + New Binder
+            </button>
+          </div>
+          <select id="inputCollectionId" onchange="handleCollectionSelectInForm(this.value)" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+            <option value="">📂 Standalone / No Folder</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-fadedInk mb-2">Medium Type</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="mediaType" value="book" class="peer sr-only" checked onchange="updateFormPlaceholders()">
+              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/50 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+                📖 Book
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="mediaType" value="manga" class="peer sr-only" onchange="updateFormPlaceholders()">
+              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/50 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+                📑 Manga / Manhwa
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="mediaType" value="anime" class="peer sr-only" onchange="updateFormPlaceholders()">
+              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/50 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+                🎬 Anime
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1" id="labelTitle">Title</label>
+            <input type="text" id="inputTitle" required placeholder="e.g., Unsleep" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1" id="labelCreator">Author / Mangaka / Studio</label>
+            <input type="text" id="inputCreator" placeholder="e.g., hyeonoe" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1" id="labelLocator">Locator / Marker</label>
+            <input type="text" id="inputLocator" placeholder="Chapter 3 or p. 142" class="w-full px-3.5 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-fadedInk mb-1">Mood / Tone</label>
+            <select id="inputMood" class="w-full px-3 py-2 text-sm bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink cursor-pointer">
+              <option value="melancholic">🌧️ Melancholic</option>
+              <option value="cathartic">🌿 Cathartic</option>
+              <option value="haunting">🕯️ Haunting</option>
+              <option value="serene">🍃 Serene</option>
+              <option value="euphoric">✨ Euphoric</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-fadedInk mb-1" id="labelQuote">Passage or Dialogue Excerpt</label>
+          <textarea id="inputQuote" rows="2" placeholder="The exact lines or dialogue that struck you..." class="w-full px-3.5 py-2 text-sm font-reader italic bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-fadedInk mb-1">Your Unsaid Thought (The Reflection)</label>
+          <textarea id="inputThought" rows="3" required placeholder="Write freely—raw thoughts, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
+        </div>
+
+        <!-- IMAGE UPLOADER -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-fadedInk">Panel Screenshot / Photo</label>
+            <div id="orientationToggle" class="hidden items-center gap-1 bg-kraft/40 p-0.5 rounded-lg border border-kraftDark/50">
+              <button type="button" onclick="setOrientation('vertical')" id="btnOrientVert" class="px-2 py-0.5 text-[10px] font-medium rounded-md transition text-fadedInk">📱 Vertical</button>
+              <button type="button" onclick="setOrientation('horizontal')" id="btnOrientHoriz" class="px-2 py-0.5 text-[10px] font-medium rounded-md transition text-fadedInk">🎬 Horizontal</button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <label class="flex-1 cursor-pointer flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-kraftDark hover:border-sage-500 rounded-xl bg-white/50 hover:bg-sage-50 transition text-xs font-medium text-sage-700">
+              <i data-lucide="image-plus" class="w-4 h-4"></i>
+              <span id="uploadLabelText">Choose Image from Device</span>
+              <input type="file" id="inputFileUpload" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+            </label>
+            <div id="imagePreviewBox" class="hidden relative w-12 h-12 rounded-lg overflow-hidden border border-kraftDark flex-shrink-0">
+              <img id="imagePreview" src="" class="w-full h-full object-cover">
+              <button type="button" onclick="clearSelectedFile()" class="absolute inset-0 bg-forest/60 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+          <p id="orientationHint" class="text-[10px] text-fadedInk mt-1">Accepts manhwa vertical strips, manga panels, or anime shots.</p>
+        </div>
+
+        <!-- 18+ / DISCREET PRIVACY CHECKBOX -->
+        <div class="pt-2">
+          <label class="flex items-center gap-2.5 p-3 rounded-xl bg-sage-100/60 border border-sage-200 cursor-pointer select-none hover:bg-sage-100 transition">
+            <input type="checkbox" id="inputSensitive" class="w-4 h-4 rounded text-forest focus:ring-sage-500 accent-forest">
+            <div>
+              <p class="text-xs font-semibold text-forest flex items-center gap-1.5">
+                <span>🔞 Mark as 18+ / Discreet</span>
+              </p>
+              <p class="text-[11px] text-fadedInk">Blur this entry by default in public. Hover or tap to unblur.</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
+          <button type="button" onclick="closeNewEntryModal()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
+          <button type="submit" id="saveEntryBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">Tape to Journal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       SUPABASE CLIENT LOGIC & REALTIME SYNC
+       ======================================================== -->
+  <script>
+    const SUPABASE_URL = 'https://lfhhbrvcawmtpepdsnze.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SeFB0mT0R20P1q54R8Q9VQ_RDGlLVXY';
+    
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let authMode = 'signin';
+    let pendingDeleteId = null;
+    let inspectingEntry = null;
+    let selectedFile = null;
+    let detectedOrientation = 'auto';
+    let isPublicMode = true;
+    
+    let entries = [];
+    let collections = [];
+    let currentFilter = 'all';
+    let selectedCollectionId = null; // When active, filters all scraps to this binder
+    let islandOpen = false;
+    let toastTimeout = null;
+
+    let defaultScrapState = {
+      badge: 'SYNC',
+      title: 'Connecting...',
+      progress: '—'
+    };
+    let activeHoverScrap = null;
+
+    const dynamicIsland = document.getElementById('dynamicIsland');
+    const islandTriggerArea = document.getElementById('islandTriggerArea');
+    const quickAddBtn = document.getElementById('quickAddBtn');
+    const islandWriteBtn = document.getElementById('islandWriteBtn');
+    const authBtn = document.getElementById('authBtn');
+
+    const gridEl = document.getElementById('journalGrid');
+    const foldersShelfEl = document.getElementById('foldersShelf');
+    const emptyStateEl = document.getElementById('emptyState');
+    const entryModal = document.getElementById('entryModal');
+    const authModal = document.getElementById('authModal');
+    const folderModal = document.getElementById('folderModal');
+    const confirmModal = document.getElementById('confirmModal');
+    const inspectModal = document.getElementById('inspectModal');
+
+    // TOAST SYSTEM
+    function showToast(title, message, type = 'success') {
+      const toast = document.getElementById('botanicalToast');
+      const toastTitle = document.getElementById('toastTitle');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIconBox = document.getElementById('toastIconBox');
+      const toastIcon = document.getElementById('toastIcon');
+      const toastWashi = document.getElementById('toastWashi');
+
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+
+      if (type === 'error') {
+        toastTitle.className = "text-xs font-semibold text-rose-800 uppercase tracking-wider";
+        toastIconBox.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-rose-100 text-rose-700";
+        toastIcon.setAttribute('data-lucide', 'alert-circle');
+        toastWashi.className = "absolute -top-2 left-8 w-20 h-4 washi-kraft rounded-sm";
+      } else {
+        toastTitle.className = "text-xs font-semibold text-forest uppercase tracking-wider";
+        toastIconBox.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-sage-100 text-forest";
+        toastIcon.setAttribute('data-lucide', 'check');
+        toastWashi.className = "absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm";
+      }
+
+      lucide.createIcons();
+
+      toast.classList.remove('-translate-y-12', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => hideToast(), 4000);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('botanicalToast');
+      toast.classList.add('-translate-y-12', 'opacity-0');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }
+
+    // DYNAMIC ISLAND CONTEXT SYSTEM
+    function setIslandDisplay(badgeText, titleText, progressText, isHighlight = false) {
+      const badgeEl = document.getElementById('islandMediaBadge');
+      const titleEl = document.getElementById('islandTitle');
+      const progressEl = document.getElementById('islandProgress');
+
+      badgeEl.classList.add('is-swapping');
+      titleEl.classList.add('is-swapping');
+      progressEl.classList.add('is-swapping');
+
+      setTimeout(() => {
+        badgeEl.textContent = badgeText;
+        titleEl.textContent = titleText;
+        progressEl.textContent = progressText;
+
+        badgeEl.classList.remove('is-swapping');
+        titleEl.classList.remove('is-swapping');
+        progressEl.classList.remove('is-swapping');
+      }, 120);
+
+      if (isHighlight) {
+        dynamicIsland.classList.add('is-highlighted');
+      } else {
+        dynamicIsland.classList.remove('is-highlighted');
+      }
+    }
+
+    function handleScrapHover(entry) {
+      activeHoverScrap = entry;
+      let badge = 'BOOK';
+      if (entry.media_type === 'manga') badge = 'MANGA';
+      if (entry.media_type === 'anime') badge = 'ANIME';
+
+      setIslandDisplay(badge, entry.title, entry.locator, true);
+    }
+
+    function handleScrapLeave() {
+      activeHoverScrap = null;
+      setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
+    }
+
+    islandTriggerArea.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (activeHoverScrap) {
+        const el = document.getElementById(`scrap-${activeHoverScrap.id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        openIsland();
+      }
+    });
+
+    // PUBLIC MODE CONTROLLER
+    function togglePublicMode(e) {
+      if (e) e.stopPropagation();
+      isPublicMode = !isPublicMode;
+
+      const body = document.body;
+      const shieldIcon = document.getElementById('shieldIcon');
+      const label = document.getElementById('publicShieldLabel');
+
+      if (isPublicMode) {
+        body.classList.add('discreet-blur-active');
+        shieldIcon.setAttribute('data-lucide', 'eye-off');
+        shieldIcon.className = 'w-4 h-4 text-emerald-400';
+        label.innerHTML = `<i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Public Mode: <b>Active</b></span>`;
+        showToast("Public Mode Active", "18+ and sensitive manga panels are blurred for privacy.", "success");
+      } else {
+        body.classList.remove('discreet-blur-active');
+        shieldIcon.setAttribute('data-lucide', 'eye');
+        shieldIcon.className = 'w-4 h-4 text-sage-300';
+        label.innerHTML = `<i data-lucide="shield-off" class="w-3.5 h-3.5 text-sage-400"></i><span>Public Mode: <b>Off</b></span>`;
+        showToast("Public Mode Off", "All panels revealed.", "success");
+      }
+
+      lucide.createIcons();
+    }
+
+    function openIsland() { islandOpen = true; dynamicIsland.classList.add('is-expanded'); }
+    function closeIsland() { if (!islandOpen) return; islandOpen = false; dynamicIsland.classList.remove('is-expanded'); }
+
+    quickAddBtn.addEventListener('click', (e) => { e.stopPropagation(); checkAuthAndOpenModal(); });
+    islandWriteBtn.addEventListener('click', (e) => { e.stopPropagation(); closeIsland(); checkAuthAndOpenModal(); });
+
+    authBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeIsland();
+      if (currentUser) handleSignOut();
+      else openAuthModal();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (islandOpen && !dynamicIsland.contains(e.target)) closeIsland();
+    });
+
+    entryModal.addEventListener('click', (e) => { if (e.target === entryModal) closeNewEntryModal(); });
+    authModal.addEventListener('click', (e) => { if (e.target === authModal) closeAuthModal(); });
+    folderModal.addEventListener('click', (e) => { if (e.target === folderModal) closeFolderModal(); });
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirmModal(); });
+    inspectModal.addEventListener('click', (e) => { if (e.target === inspectModal) closeInspectModal(); });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeIsland();
+        closeNewEntryModal();
+        closeFolderModal();
+        closeConfirmModal();
+        closeAuthModal();
+        closeInspectModal();
+      }
+      if ((e.key === 'p' || e.key === 'P') && !['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) {
+        togglePublicMode();
+      }
+    });
+
+    // MODAL VISIBILITY
+    function openNewEntryModal() { 
+      populateCollectionDropdown();
+      entryModal.classList.add('is-active'); 
+    }
+    function closeNewEntryModal() { 
+      entryModal.classList.remove('is-active'); 
+      document.getElementById('entryForm').reset();
+      clearSelectedFile();
+    }
+
+    function openFolderModal() { 
+      if (!currentUser) {
+        showToast("Sign In Required", "Please sign in to manage collections.", "error");
+        openAuthModal();
+        return;
+      }
+      folderModal.classList.add('is-active'); 
+    }
+    function closeFolderModal() { 
+      folderModal.classList.remove('is-active'); 
+      document.getElementById('inputFolderTitle').value = '';
+      document.getElementById('inputFolderCreator').value = '';
+    }
+
+    function openAuthModal() { 
+      authModal.classList.add('is-active'); 
+      document.getElementById('authEmailInput').value = '';
+      document.getElementById('authPasswordInput').value = '';
+    }
+    function closeAuthModal() { authModal.classList.remove('is-active'); }
+
+    function promptDeleteEntry(id) { pendingDeleteId = id; confirmModal.classList.add('is-active'); }
+    function closeConfirmModal() { pendingDeleteId = null; confirmModal.classList.remove('is-active'); }
+
+    // FOLDERS / COLLECTIONS MANAGEMENT
+    async function loadCollectionsFromCloud() {
+      if (!currentUser) { collections = []; renderFoldersShelf(); return; }
+      const { data, error } = await supabaseClient
+        .from('collections')
+        .select('*')
+        .order('title', { ascending: true });
+
+      if (!error && data) {
+        collections = data;
+        renderFoldersShelf();
+        populateCollectionDropdown();
+      }
+    }
+
+    async function handleCreateCollection(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const title = document.getElementById('inputFolderTitle').value.trim();
+      const creator = document.getElementById('inputFolderCreator').value.trim();
+      const media_type = document.getElementById('inputFolderType').value;
+
+      const btn = document.getElementById('saveFolderBtn');
+      btn.disabled = true;
+      btn.textContent = "Creating...";
+
+      const { data, error } = await supabaseClient
+        .from('collections')
+        .insert([{ user_id: currentUser.id, title, creator, media_type }])
+        .select();
+
+      btn.disabled = false;
+      btn.textContent = "Create Binder";
+
+      if (error) {
+        showToast("Error", error.message, "error");
+      } else {
+        closeFolderModal();
+        await loadCollectionsFromCloud();
+        showToast("Binder Created", `Folder "${title}" is ready.`, "success");
+        if (data && data[0]) selectCollection(data[0].id);
+      }
+    }
+
+    function selectCollection(collectionId) {
+      selectedCollectionId = collectionId;
+      const banner = document.getElementById('activeFolderBanner');
+      const clearBtn = document.getElementById('clearFolderFilterBtn');
+
+      if (collectionId) {
+        const col = collections.find(c => c.id === collectionId);
+        if (col) {
+          banner.classList.remove('hidden');
+          banner.classList.add('flex');
+          clearBtn.classList.remove('hidden');
+          document.getElementById('activeFolderTitle').textContent = col.title;
+          document.getElementById('activeFolderMeta').textContent = `${col.creator ? col.creator + ' • ' : ''}${col.media_type.toUpperCase()}`;
+          setIslandDisplay("BINDER", col.title, "Filtered", true);
+        }
+      } else {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+        clearBtn.classList.add('hidden');
+        updateDynamicIsland();
+      }
+      render();
+      renderFoldersShelf();
+    }
+
+    function populateCollectionDropdown() {
+      const select = document.getElementById('inputCollectionId');
+      select.innerHTML = '<option value="">📂 Standalone / No Folder</option>' + 
+        collections.map(c => `
+          <option value="${c.id}" ${selectedCollectionId === c.id ? 'selected' : ''}>
+            📁 ${escapeHtml(c.title)} (${c.media_type})
+          </option>
+        `).join('');
+    }
+
+    function handleCollectionSelectInForm(colId) {
+      if (!colId) return;
+      const col = collections.find(c => c.id === colId);
+      if (col) {
+        document.getElementById('inputTitle').value = col.title;
+        document.getElementById('inputCreator').value = col.creator || '';
+        const radio = document.querySelector(`input[name="mediaType"][value="${col.media_type}"]`);
+        if (radio) { radio.checked = true; updateFormPlaceholders(); }
+      }
+    }
+
+    function renderFoldersShelf() {
+      if (collections.length === 0) {
+        foldersShelfEl.innerHTML = `
+          <div onclick="openFolderModal()" class="cursor-pointer px-4 py-2.5 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-xs text-fadedInk hover:text-forest flex items-center gap-2 transition flex-shrink-0">
+            <i data-lucide="folder-plus" class="w-4 h-4 text-sage-600"></i>
+            <span>Create your first Story Binder...</span>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      foldersShelfEl.innerHTML = collections.map(col => {
+        const scrapCount = entries.filter(e => e.collection_id === col.id).length;
+        const isSelected = selectedCollectionId === col.id;
+        
+        return `
+          <div onclick="selectCollection('${col.id}')" class="cursor-pointer group flex-shrink-0 px-4 py-2.5 rounded-xl border transition-all paper-shadow flex items-center gap-2.5 select-none ${
+            isSelected 
+              ? 'bg-forest text-parchment border-forest scale-105' 
+              : 'bg-white/80 hover:bg-white text-ink border-kraftDark/50 hover:border-sage-500'
+          }">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm ${isSelected ? 'bg-sage-800 text-sage-200' : 'bg-sage-100 text-forest'}">
+              📁
+            </div>
+            <div>
+              <p class="text-xs font-semibold leading-tight truncate max-w-[140px]">${escapeHtml(col.title)}</p>
+              <p class="text-[10px] ${isSelected ? 'text-sage-300' : 'text-fadedInk'} mt-0.5">${scrapCount} scrap${scrapCount === 1 ? '' : 's'}</p>
+            </div>
+          </div>
+        `;
+      }).join('') + `
+        <button onclick="openFolderModal()" class="flex-shrink-0 w-9 h-9 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-fadedInk hover:text-forest flex items-center justify-center transition" title="Add another folder">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+      `;
+
+      lucide.createIcons();
+    }
+
+    // 18+ PRIVACY TOGGLES
+    async function toggleCardSensitive(id, e) {
+      if (e) e.stopPropagation();
+      const entry = entries.find(item => item.id === id);
+      if (!entry) return;
+
+      const newStatus = !entry.is_sensitive;
+      entry.is_sensitive = newStatus;
+      render();
+
+      const { error } = await supabaseClient
+        .from('entries')
+        .update({ is_sensitive: newStatus })
+        .eq('id', id);
+
+      if (error) {
+        showToast("Update Error", error.message, "error");
+        loadEntriesFromCloud();
+      } else {
+        showToast(
+          newStatus ? "Marked as 18+" : "Unmarked 18+", 
+          newStatus ? `"${entry.title}" is now blurred in public mode.` : `"${entry.title}" is now unblurred.`, 
+          "success"
+        );
+      }
+    }
+
+    async function toggleExistingEntrySensitive() {
+      if (!inspectingEntry) return;
+      const newStatus = !inspectingEntry.is_sensitive;
+      inspectingEntry.is_sensitive = newStatus;
+      updateInspectSensitiveUI(newStatus);
+
+      const { error } = await supabaseClient
+        .from('entries')
+        .update({ is_sensitive: newStatus })
+        .eq('id', inspectingEntry.id);
+
+      if (error) {
+        showToast("Update Error", error.message, "error");
+        loadEntriesFromCloud();
+      } else {
+        loadEntriesFromCloud();
+        showToast(
+          newStatus ? "Marked as 18+" : "Unmarked 18+", 
+          newStatus ? "This scrap is now discreetly blurred in public mode." : "This scrap is now visible without blur.", 
+          "success"
+        );
+      }
+    }
+
+    function updateInspectSensitiveUI(isSens) {
+      const btn = document.getElementById('inspectSensitiveToggleBtn');
+      const icon = document.getElementById('inspectSensitiveToggleIcon');
+      const text = document.getElementById('inspectSensitiveToggleText');
+
+      if (isSens) {
+        btn.className = "text-xs font-semibold px-2.5 py-1 rounded-md border border-rose-300 bg-rose-50 text-rose-800 transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+        icon.textContent = "🔞";
+        text.textContent = "18+ Discreet (Click to Unmark)";
+      } else {
+        btn.className = "text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/60 bg-white/70 hover:bg-white text-fadedInk hover:text-ink transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+        icon.textContent = "🛡️";
+        text.textContent = "Mark as 18+";
+      }
+    }
+
+    // INSPECTION (CLOSE-UP VIEW)
+    function openInspectModal(id) {
+      const entry = entries.find(e => e.id === id);
+      if (!entry) return;
+      inspectingEntry = entry;
+
+      let badge = 'BOOK';
+      if (entry.media_type === 'manga') badge = 'MANGA';
+      if (entry.media_type === 'anime') badge = 'ANIME';
+      setIslandDisplay(badge, entry.title, entry.locator, true);
+
+      let badgeLabel = '📖 Physical Book';
+      if (entry.media_type === 'manga') badgeLabel = '📑 Manga / Manhwa';
+      if (entry.media_type === 'anime') badgeLabel = '🎬 Anime Moment';
+
+      document.getElementById('inspectBadge').textContent = badgeLabel;
+      document.getElementById('inspectDate').textContent = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      document.getElementById('inspectTitle').textContent = entry.title;
+      document.getElementById('inspectCreator').textContent = entry.creator || 'Unspecified';
+      document.getElementById('inspectLocator').textContent = entry.locator;
+      document.getElementById('inspectMood').textContent = entry.mood;
+
+      updateInspectSensitiveUI(entry.is_sensitive === true);
+
+      const imageBox = document.getElementById('inspectImageBox');
+      const inspectImg = document.getElementById('inspectImage');
+      if (entry.image_url) {
+        inspectImg.src = entry.image_url;
+        imageBox.classList.remove('hidden');
+      } else {
+        imageBox.classList.add('hidden');
+      }
+
+      const quoteBox = document.getElementById('inspectQuoteBox');
+      if (entry.quote) {
+        document.getElementById('inspectQuote').textContent = `"${entry.quote}"`;
+        quoteBox.classList.remove('hidden');
+      } else {
+        quoteBox.classList.add('hidden');
+      }
+
+      document.getElementById('inspectThoughtView').textContent = entry.thought;
+      document.getElementById('inspectThoughtInput').value = entry.thought;
+      document.getElementById('inspectThoughtView').classList.remove('hidden');
+      document.getElementById('inspectThoughtEdit').classList.add('hidden');
+
+      inspectModal.classList.add('is-active');
+      lucide.createIcons();
+    }
+
+    function closeInspectModal() {
+      inspectModal.classList.remove('is-active');
+      inspectingEntry = null;
+      setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
+    }
+
+    function copyInspectQuote() {
+      if (!inspectingEntry) return;
+      const text = inspectingEntry.quote || inspectingEntry.thought;
+      navigator.clipboard.writeText(text);
+      showToast("Copied", "Text copied to clipboard.", "success");
+    }
+
+    function toggleInspectEdit() {
+      const viewEl = document.getElementById('inspectThoughtView');
+      const editEl = document.getElementById('inspectThoughtEdit');
+      viewEl.classList.toggle('hidden');
+      editEl.classList.toggle('hidden');
+    }
+
+    async function saveInspectEdit() {
+      if (!inspectingEntry) return;
+      const newThought = document.getElementById('inspectThoughtInput').value.trim();
+      if (!newThought) return;
+
+      const { error } = await supabaseClient
+        .from('entries')
+        .update({ thought: newThought })
+        .eq('id', inspectingEntry.id);
+
+      if (error) {
+        showToast("Update Error", error.message, "error");
+      } else {
+        inspectingEntry.thought = newThought;
+        document.getElementById('inspectThoughtView').textContent = newThought;
+        toggleInspectEdit();
+        loadEntriesFromCloud();
+        showToast("Updated", "Thought reflection updated.", "success");
+      }
+    }
+
+    function deleteFromInspect() {
+      if (!inspectingEntry) return;
+      const id = inspectingEntry.id;
+      closeInspectModal();
+      promptDeleteEntry(id);
+    }
+
+    // FILE ORIENTATION & UPLOAD
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      selectedFile = file;
+      document.getElementById('uploadLabelText').textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const previewImg = document.getElementById('imagePreview');
+        previewImg.src = event.target.result;
+        document.getElementById('imagePreviewBox').classList.remove('hidden');
+
+        const img = new Image();
+        img.onload = function() {
+          if (img.naturalHeight > img.naturalWidth * 1.1) {
+            setOrientation('vertical');
+            document.getElementById('orientationHint').textContent = "Auto-detected: Vertical (Manhwa strip / Portrait)";
+          } else {
+            setOrientation('horizontal');
+            document.getElementById('orientationHint').textContent = "Auto-detected: Horizontal (Widescreen / Landscape)";
+          }
+          document.getElementById('orientationToggle').classList.remove('hidden');
+          document.getElementById('orientationToggle').classList.add('flex');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setOrientation(orient) {
+      detectedOrientation = orient;
+      const btnV = document.getElementById('btnOrientVert');
+      const btnH = document.getElementById('btnOrientHoriz');
+      if (orient === 'vertical') {
+        btnV.className = "px-2 py-0.5 text-[10px] font-semibold rounded-md bg-forest text-parchment shadow-sm transition";
+        btnH.className = "px-2 py-0.5 text-[10px] font-medium rounded-md text-fadedInk hover:text-ink transition";
+      } else {
+        btnH.className = "px-2 py-0.5 text-[10px] font-semibold rounded-md bg-forest text-parchment shadow-sm transition";
+        btnV.className = "px-2 py-0.5 text-[10px] font-medium rounded-md text-fadedInk hover:text-ink transition";
+      }
+    }
+
+    function clearSelectedFile() {
+      selectedFile = null;
+      detectedOrientation = 'auto';
+      document.getElementById('inputFileUpload').value = '';
+      document.getElementById('uploadLabelText').textContent = 'Choose Image from Device';
+      document.getElementById('imagePreviewBox').classList.add('hidden');
+      document.getElementById('orientationToggle').classList.add('hidden');
+      document.getElementById('orientationToggle').classList.remove('flex');
+      document.getElementById('orientationHint').textContent = 'Accepts manhwa vertical strips, manga panels, or anime shots.';
+    }
+
+    async function uploadImageFile(file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabaseClient.storage
+        .from('journal-images')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabaseClient.storage
+        .from('journal-images')
+        .getPublicUrl(fileName);
+
+      return publicUrlData.publicUrl;
+    }
+
+    // AUTHENTICATION
+    async function initAuth() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      updateAuthState(session?.user || null);
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        updateAuthState(session?.user || null);
+        loadCollectionsFromCloud();
+        loadEntriesFromCloud();
+      });
+    }
+
+    function updateAuthState(user) {
+      currentUser = user;
+      const authBtn = document.getElementById('authBtn');
+      const authStatusText = document.getElementById('authStatusText');
+      const authUserEmail = document.getElementById('authUserEmail');
+      const syncIndicator = document.getElementById('syncIndicator');
+
+      if (user) {
+        authStatusText.textContent = "Folio Synced";
+        authUserEmail.textContent = user.email;
+        authBtn.textContent = "Sign Out";
+        syncIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0";
+      } else {
+        authStatusText.textContent = "Cloud Not Connected";
+        authUserEmail.textContent = "Sign in to sync across devices";
+        authBtn.textContent = "Sign In";
+        syncIndicator.className = "w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0";
+      }
+    }
+
+    function checkAuthAndOpenModal() {
+      if (!currentUser) {
+        showToast("Sign In Required", "Please sign in so your reflections sync to your cloud journal.", "error");
+        openAuthModal();
+        return;
+      }
+      openNewEntryModal();
+    }
+
+    function toggleAuthMode() {
+      authMode = authMode === 'signin' ? 'signup' : 'signin';
+      const header = document.getElementById('authModalHeader');
+      const sub = document.getElementById('authModalSub');
+      const submitBtn = document.getElementById('authSubmitBtn');
+      const toggleBtn = document.getElementById('authModeToggleBtn');
+
+      if (authMode === 'signup') {
+        header.textContent = "Create an Account";
+        sub.textContent = "Start your synchronized personal reading journal.";
+        submitBtn.textContent = "Create Account";
+        toggleBtn.textContent = "Already have an account? Sign In";
+      } else {
+        header.textContent = "Sign In to Folio";
+        sub.textContent = "Enter your credentials to sync across devices.";
+        submitBtn.textContent = "Sign In";
+        toggleBtn.textContent = "Need an account? Sign Up";
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim();
+      const password = document.getElementById('authPasswordInput').value;
+      const btn = document.getElementById('authSubmitBtn');
+
+      btn.disabled = true;
+      btn.textContent = authMode === 'signup' ? "Creating..." : "Signing in...";
+
+      if (authMode === 'signup') {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password
+        });
+        btn.disabled = false;
+        btn.textContent = "Create Account";
+
+        if (error) {
+          showToast("Sign-Up Error", error.message, "error");
+        } else {
+          closeAuthModal();
+          showToast("Account Created", "Welcome to your journal! You are now signed in.", "success");
+        }
+      } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+
+        if (error) {
+          showToast("Sign-In Failed", error.message, "error");
+        } else {
+          closeAuthModal();
+          showToast("Welcome Back", "Journal connected & synced.", "success");
+        }
+      }
+    }
+
+    async function handleSignOut() {
+      await supabaseClient.auth.signOut();
+      entries = [];
+      collections = [];
+      selectedCollectionId = null;
+      render();
+      renderFoldersShelf();
+      showToast("Signed Out", "Your thoughts remain safe in the cloud.", "success");
+    }
+
+    // DATABASE OPERATIONS
+    async function loadEntriesFromCloud() {
+      if (!currentUser) {
+        entries = [];
+        render();
+        updateDynamicIsland();
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from('entries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        showToast("Fetch Error", error.message, "error");
+        return;
+      }
+
+      entries = data || [];
+      render();
+      renderFoldersShelf();
+      updateDynamicIsland();
+    }
+
+    function setupRealtimeListener() {
+      supabaseClient
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, () => {
+          loadEntriesFromCloud();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'collections' }, () => {
+          loadCollectionsFromCloud();
+        })
+        .subscribe();
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const saveBtn = document.getElementById('saveEntryBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Uploading & Taping...";
+
+      let uploadedImageUrl = '';
+
+      if (selectedFile) {
+        try {
+          uploadedImageUrl = await uploadImageFile(selectedFile);
+        } catch (uploadErr) {
+          console.warn("Storage upload fallback:", uploadErr);
+          uploadedImageUrl = document.getElementById('imagePreview').src;
+        }
+      }
+
+      const collection_id = document.getElementById('inputCollectionId').value || null;
+      const media_type = document.querySelector('input[name="mediaType"]:checked').value;
+      const title = document.getElementById('inputTitle').value.trim();
+      const creator = document.getElementById('inputCreator').value.trim();
+      const locator = document.getElementById('inputLocator').value.trim() || 'Unmarked';
+      const mood = document.getElementById('inputMood').value;
+      const quote = document.getElementById('inputQuote').value.trim();
+      const thought = document.getElementById('inputThought').value.trim();
+      const is_sensitive = document.getElementById('inputSensitive').checked;
+
+      const tapes = ['washi-gingham-green', 'washi-kraft', 'washi-sage-solid'];
+      const tapeAngles = ['-2deg', '1.5deg', '-1deg', '2deg'];
+
+      const chosenTape = tapes[Math.floor(Math.random() * tapes.length)];
+      const storedTape = detectedOrientation !== 'auto' ? `${chosenTape}|${detectedOrientation}` : chosenTape;
+
+      const newRecord = {
+        user_id: currentUser.id,
+        collection_id,
+        media_type,
+        title,
+        creator,
+        locator,
+        mood,
+        quote,
+        thought,
+        is_sensitive,
+        image_url: uploadedImageUrl,
+        tape_type: storedTape,
+        tape_angle: tapeAngles[Math.floor(Math.random() * tapeAngles.length)]
+      };
+
+      const { data, error } = await supabaseClient
+        .from('entries')
+        .insert([newRecord])
+        .select();
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Tape to Journal";
+
+      if (error) {
+        showToast("Save Failed", error.message, "error");
+      } else {
+        closeNewEntryModal();
+        clearSelectedFile();
+        loadEntriesFromCloud();
+        showToast("Thought Recorded", `Taped "${title}" into your journal.`, "success");
+      }
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      if (!pendingDeleteId) return;
+      const id = pendingDeleteId;
+      closeConfirmModal();
+
+      const { error } = await supabaseClient.from('entries').delete().eq('id', id);
+      if (error) {
+        showToast("Delete Error", error.message, "error");
+      } else {
+        showToast("Scrap Torn", "The page has been discarded.", "success");
+        loadEntriesFromCloud();
+      }
+    });
+
+    // RENDER & FILTERING
+    function setFilter(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        if (btn.getAttribute('data-filter') === type) {
+          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer";
+        } else {
+          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer";
+        }
+      });
+      render();
+    }
+
+    function updateDynamicIsland() {
+      if (entries.length > 0) {
+        const latest = entries[0];
+        let badge = 'BOOK';
+        if (latest.media_type === 'manga') badge = 'MANGA';
+        if (latest.media_type === 'anime') badge = 'ANIME';
+
+        defaultScrapState = {
+          badge,
+          title: latest.title,
+          progress: latest.locator
+        };
+        document.getElementById('islandStats').textContent = `${entries.length} unsaid thoughts pinned`;
+      } else {
+        defaultScrapState = {
+          badge: currentUser ? "EMPTY" : "GUEST",
+          title: currentUser ? "No thoughts pinned" : "Sign in to sync",
+          progress: "—"
+        };
+        document.getElementById('islandStats').textContent = "0 unsaid thoughts";
+      }
+
+      if (!activeHoverScrap) {
+        setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
+      }
+    }
+
+    function render() {
+      let filtered = entries;
+
+      // Filter by Collection / Folder if selected
+      if (selectedCollectionId) {
+        filtered = filtered.filter(e => e.collection_id === selectedCollectionId);
+      }
+
+      // Filter by Media Type pill
+      if (currentFilter !== 'all') {
+        filtered = filtered.filter(e => e.media_type === currentFilter);
+      }
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = '';
+        emptyStateEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyStateEl.classList.add('hidden');
+
+      gridEl.innerHTML = filtered.map((entry, index) => {
+        const randomRotations = ['-rotate-1', 'rotate-1', '-rotate-0.5', 'rotate-0.5'];
+        const rot = randomRotations[index % randomRotations.length];
+
+        let badgeIcon = 'book';
+        let badgeLabel = 'Physical Book';
+        if (entry.media_type === 'manga') { badgeIcon = 'bookmark'; badgeLabel = 'Manga / Manhwa'; }
+        if (entry.media_type === 'anime') { badgeIcon = 'film'; badgeLabel = 'Anime Moment'; }
+
+        const formattedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const tapeParts = (entry.tape_type || 'washi-gingham-green').split('|');
+        const tapeClass = tapeParts[0] || 'washi-gingham-green';
+        const orientation = tapeParts[1] || 'auto';
+
+        let imgAspectClass = 'max-h-56 sm:max-h-60 object-cover';
+        if (orientation === 'vertical') {
+          imgAspectClass = 'aspect-[3/4] max-h-[460px] object-cover sm:object-contain bg-black/5';
+        } else if (orientation === 'horizontal') {
+          imgAspectClass = 'aspect-video object-cover';
+        }
+
+        const isSensitive = entry.is_sensitive === true;
+
+        const serializedEntry = escapeHtml(JSON.stringify({
+          id: entry.id,
+          title: entry.title,
+          media_type: entry.media_type,
+          locator: entry.locator
+        }));
+
+        return `
+          <article 
+            id="scrap-${entry.id}" 
+            data-scrap='${serializedEntry}'
+            onclick="openInspectModal('${entry.id}')" 
+            onmouseenter="handleScrapHoverCard(this)" 
+            onmouseleave="handleScrapLeave()" 
+            class="relative bg-white/95 rounded-2xl p-6 paper-shadow border border-kraftDark/40 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 transform ${rot} group cursor-pointer select-none">
+            
+            <div class="absolute -top-3.5 left-10 w-28 h-6 ${tapeClass} rounded-sm z-20" style="transform: rotate(${entry.tape_angle || '-1deg'})"></div>
+            
+            <div class="flex items-center justify-between pt-1 mb-3 text-xs text-fadedInk">
+              <div class="flex items-center gap-1.5">
+                <span class="inline-flex items-center gap-1.5 font-medium px-2.5 py-0.5 rounded-md bg-sage-50 text-sage-700 border border-sage-200/60">
+                  <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
+                  <span>${badgeLabel}</span>
+                </span>
+                ${isSensitive ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">🔞 18+</span>` : ''}
+              </div>
+              <span class="font-mono text-[11px] text-fadedInk/80">${formattedDate}</span>
+            </div>
+
+            <div class="mb-4">
+              <h2 class="text-2xl font-serif text-forest leading-snug group-hover:text-sage-900 transition-colors">${escapeHtml(entry.title)}</h2>
+              <p class="text-xs text-fadedInk font-sans mt-0.5">${escapeHtml(entry.creator || '')} • <span class="font-reader italic text-sage-700 font-medium">${escapeHtml(entry.locator)}</span></p>
+            </div>
+
+            ${entry.image_url ? `
+              <div class="relative mb-4 p-2.5 bg-white rounded-lg polaroid-shadow border border-kraftDark/40 transform -rotate-0.5 overflow-hidden ${isSensitive ? 'sensitive-wrapper' : ''}">
+                <div class="relative overflow-hidden rounded ${isSensitive ? 'sensitive-content' : ''}">
+                  <img src="${escapeHtml(entry.image_url)}" alt="Panel" class="w-full ${imgAspectClass} rounded" loading="lazy" />
+                </div>
+                
+                ${isSensitive ? `
+                  <div class="discreet-overlay pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-3 text-center transition-opacity">
+                    <div class="bg-forest/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-sage-300/30 text-white flex items-center gap-2 shadow-lg">
+                      <i data-lucide="lock" class="w-3.5 h-3.5 text-sage-300"></i>
+                      <span class="text-xs font-medium">Discreet 18+ Panel</span>
+                    </div>
+                    <span class="text-[10px] text-fadedInk mt-1.5 font-hand bg-parchment/80 px-2 py-0.5 rounded">hover or tap to peek</span>
+                  </div>
+                ` : ''}
+
+                <p class="font-hand text-right text-xs text-fadedInk pt-1.5 pr-1">recorded fragment • click to inspect</p>
+              </div>
+            ` : ''}
+
+            ${entry.quote ? `
+              <div class="relative bg-parchment p-4 rounded-xl border-l-4 border-sage-500 mb-4 shadow-inner">
+                <p class="font-reader italic text-forest/90 text-sm leading-relaxed">
+                  "${escapeHtml(entry.quote)}"
+                </p>
+              </div>
+            ` : ''}
+
+            <div class="relative pt-1">
+              <p class="text-[11px] uppercase tracking-wider font-semibold text-sage-700/80 mb-1 flex items-center gap-1">
+                <i data-lucide="feather" class="w-3.5 h-3.5"></i>
+                <span>Unsaid Reflection</span>
+              </p>
+              <p class="font-sans text-sm text-ink/90 leading-relaxed bg-kraft/15 p-3 rounded-lg border border-kraftDark/20 line-clamp-4">
+                ${escapeHtml(entry.thought)}
+              </p>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-kraftDark/25 flex items-center justify-between text-xs">
+              <span class="font-hand text-base text-sage-700 flex items-center gap-1">
+                <span>Tone:</span>
+                <span class="font-semibold capitalize">${entry.mood}</span>
+              </span>
+              
+              <div class="flex items-center gap-2">
+                <button onclick="toggleCardSensitive('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
+                  <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 ${isSensitive ? 'text-rose-700' : ''}"></i>
+                </button>
+
+                <button onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function handleScrapHoverCard(cardElement) {
+      try {
+        const raw = cardElement.getAttribute('data-scrap');
+        if (!raw) return;
+        const entry = JSON.parse(raw);
+        handleScrapHover(entry);
+      } catch (err) {
+        console.warn("Hover parse error:", err);
+      }
+    }
+
+    function updateFormPlaceholders() {
+      const type = document.querySelector('input[name="mediaType"]:checked').value;
+      const labelCreator = document.getElementById('labelCreator');
+      const inputCreator = document.getElementById('inputCreator');
+      const labelLocator = document.getElementById('labelLocator');
+      const inputLocator = document.getElementById('inputLocator');
+      const labelQuote = document.getElementById('labelQuote');
+
+      if (type === 'book') {
+        labelCreator.textContent = "Author";
+        inputCreator.placeholder = "e.g., Haruki Murakami";
+        labelLocator.textContent = "Page / Chapter";
+        inputLocator.placeholder = "e.g., p. 142 or Chapter 4";
+        labelQuote.textContent = "Passage Excerpt";
+      } else if (type === 'manga') {
+        labelCreator.textContent = "Mangaka / Studio";
+        inputCreator.placeholder = "e.g., hyeonoe or Tatsuki Fujimoto";
+        labelLocator.textContent = "Chapter / Volume";
+        inputLocator.placeholder = "e.g., Chapter 3 or Vol. 1";
+        labelQuote.textContent = "Panel Dialogue";
+      } else if (type === 'anime') {
+        labelCreator.textContent = "Animation Studio / Director";
+        inputCreator.placeholder = "e.g., MAPPA or Makoto Shinkai";
+        labelLocator.textContent = "Episode & Timestamp";
+        inputLocator.placeholder = "e.g., Ep. 09 • 14:22";
+        labelQuote.textContent = "Spoken Dialogue / Line";
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+      setupRealtimeListener();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
