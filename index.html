@@ -80,7 +80,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    /* Dynamic Island */
+    /* Apple-Style Dynamic Island */
     .dynamic-island {
       width: 360px;
       height: 48px;
@@ -137,6 +137,32 @@
       pointer-events: auto;
       transform: translateY(0);
       transition-delay: 0.05s;
+    }
+
+    /* Apple-Style Smooth Modal Spring Transitions */
+    .apple-modal-backdrop {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+    }
+
+    .apple-modal-backdrop.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .apple-modal-card {
+      opacity: 0;
+      transform: scale(0.94) translateY(24px);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+      will-change: transform, opacity;
+    }
+
+    .apple-modal-backdrop.is-active .apple-modal-card {
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
 
     .paper-shadow {
@@ -222,7 +248,6 @@
           </div>
         </div>
 
-        <!-- Filter Buttons inside Island -->
         <div class="grid grid-cols-4 gap-2 my-2">
           <button onclick="setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
           <button onclick="setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
@@ -230,7 +255,6 @@
           <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
-        <!-- Bottom bar inside Island -->
         <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
           <span class="text-xs text-sage-400 font-reader italic" id="islandStats">0 unsaid thoughts</span>
           <button id="islandWriteBtn" class="text-xs font-semibold bg-sage-300 hover:bg-sage-200 text-forest px-4 py-2 rounded-full font-sans transition flex items-center gap-2 shadow-sm cursor-pointer active:scale-95">
@@ -300,10 +324,10 @@
   </main>
 
   <!-- ========================================================
-       MODAL: AUTH
+       MODAL: AUTH (SPRING ANIMATED)
        ======================================================== -->
-  <div id="authModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
+  <div id="authModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
       
       <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
@@ -332,7 +356,7 @@
         <button type="button" id="authModeToggleBtn" onclick="toggleAuthMode()" class="text-sage-700 hover:text-forest underline font-medium cursor-pointer">
           Need an account? Sign Up
         </button>
-        <button type="button" onclick="toggleAuthModal()" class="text-fadedInk hover:text-ink cursor-pointer">
+        <button type="button" onclick="closeAuthModal()" class="text-fadedInk hover:text-ink cursor-pointer">
           Close
         </button>
       </div>
@@ -340,10 +364,10 @@
   </div>
 
   <!-- ========================================================
-       MODAL: CONFIRMATION
+       MODAL: CONFIRMATION (SPRING ANIMATED)
        ======================================================== -->
-  <div id="confirmModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
+  <div id="confirmModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-5 washi-kraft rounded-sm rotate-2"></div>
       <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-red-100/70 flex items-center justify-center text-red-700">
         <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -358,10 +382,10 @@
   </div>
 
   <!-- ========================================================
-       MODAL: ADD NEW SCRAPBOOK ENTRY (WITH DEVICE IMAGE UPLOAD)
+       MODAL: ADD NEW SCRAPBOOK ENTRY (SPRING ANIMATED)
        ======================================================== -->
-  <div id="entryModal" class="fixed inset-0 z-50 bg-forest/40 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden transform transition-all">
+  <div id="entryModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 washi-gingham-green rounded-sm z-10 rotate-1"></div>
 
       <div class="px-6 pt-7 pb-4 border-b border-kraftDark/30 flex items-center justify-between">
@@ -437,7 +461,7 @@
           <textarea id="inputThought" rows="3" required placeholder="Write freely—raw interpretations, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
         </div>
 
-        <!-- NEW: DEVICE IMAGE UPLOADER -->
+        <!-- DEVICE IMAGE UPLOADER -->
         <div>
           <label class="block text-xs font-medium text-fadedInk mb-1">Panel Screenshot / Photo (From Device)</label>
           <div class="flex items-center gap-3">
@@ -545,7 +569,6 @@
       dynamicIsland.classList.remove('is-expanded');
     }
 
-    // Dedicated Click Handlers
     islandTriggerArea.addEventListener('click', (e) => {
       e.stopPropagation();
       openIsland();
@@ -568,7 +591,7 @@
       if (currentUser) {
         handleSignOut();
       } else {
-        toggleAuthModal();
+        openAuthModal();
       }
     });
 
@@ -578,14 +601,56 @@
       }
     });
 
+    // Close on backdrop click
+    entryModal.addEventListener('click', (e) => {
+      if (e.target === entryModal) closeNewEntryModal();
+    });
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) closeAuthModal();
+    });
+    confirmModal.addEventListener('click', (e) => {
+      if (e.target === confirmModal) closeConfirmModal();
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeIsland();
         closeNewEntryModal();
         closeConfirmModal();
-        if (!authModal.classList.contains('hidden')) toggleAuthModal();
+        closeAuthModal();
       }
     });
+
+    // MODAL SPRING ANIMATION CONTROLLERS
+    function openNewEntryModal() {
+      entryModal.classList.add('is-active');
+    }
+
+    function closeNewEntryModal() {
+      entryModal.classList.remove('is-active');
+      document.getElementById('entryForm').reset();
+      clearSelectedFile();
+    }
+
+    function openAuthModal() {
+      authModal.classList.add('is-active');
+      document.getElementById('authEmailInput').value = '';
+      document.getElementById('authPasswordInput').value = '';
+    }
+
+    function closeAuthModal() {
+      authModal.classList.remove('is-active');
+    }
+
+    function promptDeleteEntry(id) {
+      pendingDeleteId = id;
+      confirmModal.classList.add('is-active');
+    }
+
+    function closeConfirmModal() {
+      pendingDeleteId = null;
+      confirmModal.classList.remove('is-active');
+    }
 
     // FILE SELECTION & PREVIEW
     function handleFileSelect(e) {
@@ -610,7 +675,6 @@
       document.getElementById('imagePreviewBox').classList.add('hidden');
     }
 
-    // Upload Helper: Uploads to Supabase storage bucket 'journal-images'
     async function uploadImageFile(file) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
@@ -662,19 +726,10 @@
     function checkAuthAndOpenModal() {
       if (!currentUser) {
         showToast("Sign In Required", "Please sign in so your reflections sync to your cloud journal.", "error");
-        toggleAuthModal();
+        openAuthModal();
         return;
       }
       openNewEntryModal();
-    }
-
-    function toggleAuthModal() {
-      authModal.classList.toggle('hidden');
-      authModal.classList.toggle('flex');
-      if (!authModal.classList.contains('hidden')) {
-        document.getElementById('authEmailInput').value = '';
-        document.getElementById('authPasswordInput').value = '';
-      }
     }
 
     function toggleAuthMode() {
@@ -717,7 +772,7 @@
         if (error) {
           showToast("Sign-Up Error", error.message, "error");
         } else {
-          toggleAuthModal();
+          closeAuthModal();
           showToast("Account Created", "Welcome to your journal! You are now signed in.", "success");
         }
       } else {
@@ -731,7 +786,7 @@
         if (error) {
           showToast("Sign-In Failed", error.message, "error");
         } else {
-          toggleAuthModal();
+          closeAuthModal();
           showToast("Welcome Back", "Journal connected & synced.", "success");
         }
       }
@@ -787,12 +842,11 @@
 
       let uploadedImageUrl = '';
 
-      // Upload file from device if chosen
       if (selectedFile) {
         try {
           uploadedImageUrl = await uploadImageFile(selectedFile);
         } catch (uploadErr) {
-          console.warn("Storage upload failed, falling back to base64 preview:", uploadErr);
+          console.warn("Storage upload failed, falling back to local base64:", uploadErr);
           uploadedImageUrl = document.getElementById('imagePreview').src;
         }
       }
@@ -838,18 +892,6 @@
         loadEntriesFromCloud();
         showToast("Thought Recorded", `Taped "${title}" into your journal.`, "success");
       }
-    }
-
-    function promptDeleteEntry(id) {
-      pendingDeleteId = id;
-      confirmModal.classList.remove('hidden');
-      confirmModal.classList.add('flex');
-    }
-
-    function closeConfirmModal() {
-      pendingDeleteId = null;
-      confirmModal.classList.add('hidden');
-      confirmModal.classList.remove('flex');
     }
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
@@ -975,18 +1017,6 @@
       }).join('');
 
       lucide.createIcons();
-    }
-
-    function openNewEntryModal() {
-      entryModal.classList.remove('hidden');
-      entryModal.classList.add('flex');
-    }
-
-    function closeNewEntryModal() {
-      entryModal.classList.add('hidden');
-      entryModal.classList.remove('flex');
-      document.getElementById('entryForm').reset();
-      clearSelectedFile();
     }
 
     function updateFormPlaceholders() {
