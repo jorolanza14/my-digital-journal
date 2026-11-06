@@ -90,14 +90,16 @@
       box-shadow: 0 16px 36px -4px rgba(18, 28, 18, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
       transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
                   height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-                  border-radius 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+                  border-radius 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.25s ease,
+                  box-shadow 0.25s ease;
       overflow: hidden;
       position: relative;
     }
 
     @media (min-width: 768px) {
       .dynamic-island {
-        width: 460px;
+        width: 470px;
         height: 52px;
       }
     }
@@ -106,6 +108,12 @@
       width: min(620px, calc(100vw - 28px)) !important;
       height: 244px !important;
       border-radius: 28px !important;
+    }
+
+    /* Subtle pulse glow when hovering or focused on a scrap */
+    .dynamic-island.is-highlighted {
+      border-color: rgba(167, 193, 165, 0.85);
+      box-shadow: 0 18px 40px -4px rgba(45, 75, 45, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
     }
 
     .island-layer-collapsed {
@@ -137,6 +145,15 @@
       pointer-events: auto;
       transform: translateY(0);
       transition-delay: 0.05s;
+    }
+
+    /* Smooth text transitions inside Dynamic Island */
+    .island-text-anim {
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .island-text-anim.is-swapping {
+      opacity: 0;
+      transform: translateY(-4px);
     }
 
     /* Apple-Style Smooth Modal Spring Transitions */
@@ -215,7 +232,7 @@
   </div>
 
   <!-- ========================================================
-       DYNAMIC ISLAND WITH PUBLIC SHIELD TOGGLE
+       DYNAMIC ISLAND (CONTEXT-AWARE REACTIVE SYSTEM)
        ======================================================== -->
   <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
@@ -225,12 +242,14 @@
         <div id="islandTriggerArea" class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer py-2 group" title="Click to open journal control center">
           <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform" title="Checking sync..."></div>
           <span class="text-xs md:text-sm font-medium tracking-wide text-sage-200 flex items-center gap-2 truncate">
-            <span id="islandMediaBadge" class="text-[10px] md:text-[11px] bg-sage-700/70 text-sage-100 px-2.5 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0 font-semibold">Sync</span>
-            <span id="islandTitle" class="truncate text-white font-medium">Connecting...</span>
+            <span id="islandMediaBadge" class="island-text-anim text-[10px] md:text-[11px] bg-sage-700/70 text-sage-100 px-2.5 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0 font-semibold">Sync</span>
+            <span id="islandTitle" class="island-text-anim truncate text-white font-medium">Connecting...</span>
           </span>
         </div>
 
         <div class="flex items-center gap-2 md:gap-2.5 pl-3 border-l border-sage-700/60 flex-shrink-0">
+          <span class="island-text-anim text-xs font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
+
           <!-- Discreet Public Mode Quick Toggle -->
           <button id="quickShieldBtn" onclick="togglePublicMode(event)" class="w-8 h-8 rounded-full bg-sage-800/80 hover:bg-sage-700 text-sage-300 flex items-center justify-center transition active:scale-90 cursor-pointer" title="Toggle Public Mode (Blur 18+)">
             <i id="shieldIcon" data-lucide="eye-off" class="w-4 h-4 text-emerald-400"></i>
@@ -264,6 +283,7 @@
           </div>
         </div>
 
+        <!-- Filter Buttons inside Island -->
         <div class="grid grid-cols-4 gap-2 my-1">
           <button onclick="setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
           <button onclick="setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
@@ -271,6 +291,7 @@
           <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
+        <!-- Bottom bar with Public Mode Status -->
         <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
           <button onclick="togglePublicMode(event)" class="text-xs text-sage-300 hover:text-white flex items-center gap-1.5 cursor-pointer font-sans">
             <span id="publicShieldLabel" class="flex items-center gap-1.5">
@@ -346,7 +367,7 @@
   </main>
 
   <!-- ========================================================
-       MODAL: INSPECT ENTRY (CLOSE-UP VIEW WITH 18+ TOGGLE)
+       MODAL: INSPECT ENTRY (CLOSE-UP VIEW)
        ======================================================== -->
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
@@ -358,7 +379,6 @@
         <div class="flex items-center gap-2 flex-wrap">
           <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
           
-          <!-- Quick 18+ Toggle Button for Existing Scraps -->
           <button id="inspectSensitiveToggleBtn" onclick="toggleExistingEntrySensitive()" class="text-xs font-medium px-2.5 py-1 rounded-md border transition flex items-center gap-1.5 cursor-pointer shadow-sm">
             <span id="inspectSensitiveToggleIcon">🔞</span>
             <span id="inspectSensitiveToggleText">Mark as 18+</span>
@@ -635,6 +655,14 @@
     let islandOpen = false;
     let toastTimeout = null;
 
+    // Focused scrap memory for the dynamic island
+    let defaultScrapState = {
+      badge: 'SYNC',
+      title: 'Connecting...',
+      progress: '—'
+    };
+    let activeHoverScrap = null;
+
     const dynamicIsland = document.getElementById('dynamicIsland');
     const islandTriggerArea = document.getElementById('islandTriggerArea');
     const quickAddBtn = document.getElementById('quickAddBtn');
@@ -687,6 +715,60 @@
       toast.classList.remove('translate-y-0', 'opacity-100');
     }
 
+    // DYNAMIC ISLAND CONTEXT-AWARE SYSTEM
+    function setIslandDisplay(badgeText, titleText, progressText, isHighlight = false) {
+      const badgeEl = document.getElementById('islandMediaBadge');
+      const titleEl = document.getElementById('islandTitle');
+      const progressEl = document.getElementById('islandProgress');
+
+      badgeEl.classList.add('is-swapping');
+      titleEl.classList.add('is-swapping');
+      progressEl.classList.add('is-swapping');
+
+      setTimeout(() => {
+        badgeEl.textContent = badgeText;
+        titleEl.textContent = titleText;
+        progressEl.textContent = progressText;
+
+        badgeEl.classList.remove('is-swapping');
+        titleEl.classList.remove('is-swapping');
+        progressEl.classList.remove('is-swapping');
+      }, 120);
+
+      if (isHighlight) {
+        dynamicIsland.classList.add('is-highlighted');
+      } else {
+        dynamicIsland.classList.remove('is-highlighted');
+      }
+    }
+
+    // Called when mouse enters scrap card on desktop
+    function handleScrapHover(entry) {
+      activeHoverScrap = entry;
+      let badge = 'BOOK';
+      if (entry.media_type === 'manga') badge = 'MANGA';
+      if (entry.media_type === 'anime') badge = 'ANIME';
+
+      setIslandDisplay(badge, entry.title, entry.locator, true);
+    }
+
+    // Called when mouse leaves scrap card on desktop
+    function handleScrapLeave() {
+      activeHoverScrap = null;
+      setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
+    }
+
+    // Scroll to the card when tapping the dynamic island title
+    islandTriggerArea.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (activeHoverScrap) {
+        const el = document.getElementById(`scrap-${activeHoverScrap.id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        openIsland();
+      }
+    });
+
     // PUBLIC MODE SHIELD CONTROLLER
     function togglePublicMode(e) {
       if (e) e.stopPropagation();
@@ -724,11 +806,6 @@
       islandOpen = false;
       dynamicIsland.classList.remove('is-expanded');
     }
-
-    islandTriggerArea.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openIsland();
-    });
 
     quickAddBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -822,7 +899,7 @@
 
       const newStatus = !entry.is_sensitive;
       entry.is_sensitive = newStatus;
-      render(); // Optimistic instant UI feedback
+      render();
 
       const { error } = await supabaseClient
         .from('entries')
@@ -881,11 +958,17 @@
       }
     }
 
-    // INSPECTION (CLOSE-UP VIEW)
+    // INSPECTION (CLOSE-UP VIEW & MOBILE/TABLET DYNAMIC ISLAND LINK)
     function openInspectModal(id) {
       const entry = entries.find(e => e.id === id);
       if (!entry) return;
       inspectingEntry = entry;
+
+      // Update the Dynamic Island immediately to reflect the tapped scrap (Mobile & iPad)
+      let badge = 'BOOK';
+      if (entry.media_type === 'manga') badge = 'MANGA';
+      if (entry.media_type === 'anime') badge = 'ANIME';
+      setIslandDisplay(badge, entry.title, entry.locator, true);
 
       let badgeLabel = '📖 Physical Book';
       if (entry.media_type === 'manga') badgeLabel = '📑 Manga / Manhwa';
@@ -898,7 +981,6 @@
       document.getElementById('inspectLocator').textContent = entry.locator;
       document.getElementById('inspectMood').textContent = entry.mood;
 
-      // Update 18+ inspection pill & button
       updateInspectSensitiveUI(entry.is_sensitive === true);
 
       // Image inspection
@@ -933,6 +1015,8 @@
     function closeInspectModal() {
       inspectModal.classList.remove('is-active');
       inspectingEntry = null;
+      // Return Dynamic Island to default state
+      setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
     }
 
     function copyInspectQuote() {
@@ -1286,15 +1370,27 @@
     function updateDynamicIsland() {
       if (entries.length > 0) {
         const latest = entries[0];
-        document.getElementById('islandTitle').textContent = latest.title;
-        document.getElementById('islandMediaBadge').textContent = latest.media_type;
-        document.getElementById('islandProgress').textContent = latest.locator;
+        let badge = 'BOOK';
+        if (latest.media_type === 'manga') badge = 'MANGA';
+        if (latest.media_type === 'anime') badge = 'ANIME';
+
+        defaultScrapState = {
+          badge,
+          title: latest.title,
+          progress: latest.locator
+        };
         document.getElementById('islandStats').textContent = `${entries.length} unsaid thoughts pinned`;
       } else {
-        document.getElementById('islandTitle').textContent = currentUser ? "No thoughts pinned" : "Sign in to sync";
-        document.getElementById('islandMediaBadge').textContent = currentUser ? "Empty" : "Guest";
-        document.getElementById('islandProgress').textContent = "—";
+        defaultScrapState = {
+          badge: currentUser ? "EMPTY" : "GUEST",
+          title: currentUser ? "No thoughts pinned" : "Sign in to sync",
+          progress: "—"
+        };
         document.getElementById('islandStats').textContent = "0 unsaid thoughts";
+      }
+
+      if (!activeHoverScrap) {
+        setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
       }
     }
 
@@ -1335,8 +1431,22 @@
 
         const isSensitive = entry.is_sensitive === true;
 
+        // Serialized entry object for clean HTML event bindings
+        const serializedEntry = escapeHtml(JSON.stringify({
+          id: entry.id,
+          title: entry.title,
+          media_type: entry.media_type,
+          locator: entry.locator
+        }));
+
         return `
-          <article onclick="openInspectModal('${entry.id}')" class="relative bg-white/95 rounded-2xl p-6 paper-shadow border border-kraftDark/40 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 transform ${rot} group cursor-pointer select-none">
+          <article 
+            id="scrap-${entry.id}" 
+            data-scrap='${serializedEntry}'
+            onclick="openInspectModal('${entry.id}')" 
+            onmouseenter="handleScrapHoverCard(this)" 
+            onmouseleave="handleScrapLeave()" 
+            class="relative bg-white/95 rounded-2xl p-6 paper-shadow border border-kraftDark/40 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 transform ${rot} group cursor-pointer select-none">
             
             <div class="absolute -top-3.5 left-10 w-28 h-6 ${tapeClass} rounded-sm z-20" style="transform: rotate(${entry.tape_angle || '-1deg'})"></div>
             
@@ -1405,12 +1515,10 @@
               </span>
               
               <div class="flex items-center gap-2">
-                <!-- Quick 18+ card toggle button -->
                 <button onclick="toggleCardSensitive('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
                   <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 ${isSensitive ? 'text-rose-700' : ''}"></i>
                 </button>
 
-                <!-- Tear page button -->
                 <button onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
@@ -1421,6 +1529,17 @@
       }).join('');
 
       lucide.createIcons();
+    }
+
+    function handleScrapHoverCard(cardElement) {
+      try {
+        const raw = cardElement.getAttribute('data-scrap');
+        if (!raw) return;
+        const entry = JSON.parse(raw);
+        handleScrapHover(entry);
+      } catch (err) {
+        console.warn("Hover parse error:", err);
+      }
     }
 
     function updateFormPlaceholders() {
@@ -1454,7 +1573,7 @@
 
     function escapeHtml(str) {
       if (!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     document.addEventListener('DOMContentLoaded', () => {
