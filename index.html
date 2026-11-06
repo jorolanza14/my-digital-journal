@@ -264,7 +264,6 @@
           </div>
         </div>
 
-        <!-- Filter Buttons inside Island -->
         <div class="grid grid-cols-4 gap-2 my-1">
           <button onclick="setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
           <button onclick="setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
@@ -272,7 +271,6 @@
           <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
-        <!-- Bottom bar with Public Mode Status -->
         <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
           <button onclick="togglePublicMode(event)" class="text-xs text-sage-300 hover:text-white flex items-center gap-1.5 cursor-pointer font-sans">
             <span id="publicShieldLabel" class="flex items-center gap-1.5">
@@ -348,7 +346,7 @@
   </main>
 
   <!-- ========================================================
-       MODAL: INSPECT ENTRY (CLOSE-UP VIEW)
+       MODAL: INSPECT ENTRY (CLOSE-UP VIEW WITH 18+ TOGGLE)
        ======================================================== -->
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
@@ -357,9 +355,15 @@
 
       <!-- Inspection Header -->
       <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 flex items-center justify-between flex-shrink-0 bg-parchment">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
-          <span id="inspectSensitiveBadge" class="hidden text-[11px] font-semibold px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">🔞 18+ Discreet</span>
+          
+          <!-- Quick 18+ Toggle Button for Existing Scraps -->
+          <button id="inspectSensitiveToggleBtn" onclick="toggleExistingEntrySensitive()" class="text-xs font-medium px-2.5 py-1 rounded-md border transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+            <span id="inspectSensitiveToggleIcon">🔞</span>
+            <span id="inspectSensitiveToggleText">Mark as 18+</span>
+          </button>
+
           <span id="inspectDate" class="text-xs font-mono text-fadedInk"></span>
         </div>
         <div class="flex items-center gap-2">
@@ -589,7 +593,7 @@
           <p id="orientationHint" class="text-[10px] text-fadedInk mt-1">Accepts manhwa vertical strips, manga panels, or anime shots.</p>
         </div>
 
-        <!-- NEW: 18+ / DISCREET PRIVACY CHECKBOX -->
+        <!-- 18+ / DISCREET PRIVACY CHECKBOX -->
         <div class="pt-2">
           <label class="flex items-center gap-2.5 p-3 rounded-xl bg-sage-100/60 border border-sage-200 cursor-pointer select-none hover:bg-sage-100 transition">
             <input type="checkbox" id="inputSensitive" class="w-4 h-4 rounded text-forest focus:ring-sage-500 accent-forest">
@@ -625,7 +629,7 @@
     let inspectingEntry = null;
     let selectedFile = null;
     let detectedOrientation = 'auto';
-    let isPublicMode = true; // Default to Safe Public Mode enabled
+    let isPublicMode = true;
     let entries = [];
     let currentFilter = 'all';
     let islandOpen = false;
@@ -774,7 +778,6 @@
         closeAuthModal();
         closeInspectModal();
       }
-      // Shortcut 'p' for instant Public Mode toggle
       if ((e.key === 'p' || e.key === 'P') && !['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) {
         togglePublicMode();
       }
@@ -811,6 +814,73 @@
       confirmModal.classList.remove('is-active');
     }
 
+    // UPDATE 18+ PRIVACY DIRECTLY ON AN EXISTING POSTED SCRAP
+    async function toggleCardSensitive(id, e) {
+      if (e) e.stopPropagation();
+      const entry = entries.find(item => item.id === id);
+      if (!entry) return;
+
+      const newStatus = !entry.is_sensitive;
+      entry.is_sensitive = newStatus;
+      render(); // Optimistic instant UI feedback
+
+      const { error } = await supabaseClient
+        .from('entries')
+        .update({ is_sensitive: newStatus })
+        .eq('id', id);
+
+      if (error) {
+        showToast("Update Error", error.message, "error");
+        loadEntriesFromCloud();
+      } else {
+        showToast(
+          newStatus ? "Marked as 18+" : "Unmarked 18+", 
+          newStatus ? `"${entry.title}" is now blurred in public mode.` : `"${entry.title}" is now unblurred.`, 
+          "success"
+        );
+      }
+    }
+
+    async function toggleExistingEntrySensitive() {
+      if (!inspectingEntry) return;
+      const newStatus = !inspectingEntry.is_sensitive;
+      inspectingEntry.is_sensitive = newStatus;
+      updateInspectSensitiveUI(newStatus);
+
+      const { error } = await supabaseClient
+        .from('entries')
+        .update({ is_sensitive: newStatus })
+        .eq('id', inspectingEntry.id);
+
+      if (error) {
+        showToast("Update Error", error.message, "error");
+        loadEntriesFromCloud();
+      } else {
+        loadEntriesFromCloud();
+        showToast(
+          newStatus ? "Marked as 18+" : "Unmarked 18+", 
+          newStatus ? "This scrap is now discreetly blurred in public mode." : "This scrap is now visible without blur.", 
+          "success"
+        );
+      }
+    }
+
+    function updateInspectSensitiveUI(isSens) {
+      const btn = document.getElementById('inspectSensitiveToggleBtn');
+      const icon = document.getElementById('inspectSensitiveToggleIcon');
+      const text = document.getElementById('inspectSensitiveToggleText');
+
+      if (isSens) {
+        btn.className = "text-xs font-semibold px-2.5 py-1 rounded-md border border-rose-300 bg-rose-50 text-rose-800 transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+        icon.textContent = "🔞";
+        text.textContent = "18+ Discreet (Click to Unmark)";
+      } else {
+        btn.className = "text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/60 bg-white/70 hover:bg-white text-fadedInk hover:text-ink transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+        icon.textContent = "🛡️";
+        text.textContent = "Mark as 18+";
+      }
+    }
+
     // INSPECTION (CLOSE-UP VIEW)
     function openInspectModal(id) {
       const entry = entries.find(e => e.id === id);
@@ -828,10 +898,8 @@
       document.getElementById('inspectLocator').textContent = entry.locator;
       document.getElementById('inspectMood').textContent = entry.mood;
 
-      // 18+ Discreet pill
-      const sensitiveBadge = document.getElementById('inspectSensitiveBadge');
-      if (entry.is_sensitive) sensitiveBadge.classList.remove('hidden');
-      else sensitiveBadge.classList.add('hidden');
+      // Update 18+ inspection pill & button
+      updateInspectSensitiveUI(entry.is_sensitive === true);
 
       // Image inspection
       const imageBox = document.getElementById('inspectImageBox');
@@ -1329,7 +1397,7 @@
               </p>
             </div>
 
-            <!-- Footer Meta -->
+            <!-- Footer Meta & Quick Action Buttons -->
             <div class="mt-4 pt-3 border-t border-kraftDark/25 flex items-center justify-between text-xs">
               <span class="font-hand text-base text-sage-700 flex items-center gap-1">
                 <span>Tone:</span>
@@ -1337,7 +1405,12 @@
               </span>
               
               <div class="flex items-center gap-2">
-                <span class="text-[10px] text-sage-600 font-sans opacity-0 group-hover:opacity-100 transition-opacity">Click to Inspect →</span>
+                <!-- Quick 18+ card toggle button -->
+                <button onclick="toggleCardSensitive('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
+                  <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 ${isSensitive ? 'text-rose-700' : ''}"></i>
+                </button>
+
+                <!-- Tear page button -->
                 <button onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
