@@ -211,9 +211,9 @@
 <body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest pb-24 discreet-blur-active">
 
   <!-- ========================================================
-       BOTANICAL THEMED TOAST DIALOGUE BOX
+       BOTANICAL THEMED TOAST DIALOGUE BOX (z-[90])
        ======================================================== -->
-  <div class="fixed top-24 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+  <div class="fixed top-24 left-0 right-0 z-[90] flex justify-center pointer-events-none px-4">
     <div id="botanicalToast" class="pointer-events-auto transform -translate-y-12 opacity-0 flex items-center gap-3 px-5 py-3 rounded-xl paper-shadow border max-w-md w-full bg-parchment text-ink select-none relative overflow-hidden transition-all duration-300">
       <div id="toastWashi" class="absolute -top-2 left-8 w-20 h-4 washi-gingham-green rounded-sm"></div>
       <div id="toastIconBox" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-sage-100 text-forest">
@@ -230,7 +230,7 @@
   </div>
 
   <!-- ========================================================
-       DYNAMIC ISLAND
+       DYNAMIC ISLAND (z-40)
        ======================================================== -->
   <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
@@ -398,84 +398,7 @@
   </main>
 
   <!-- ========================================================
-       MODAL: CREATE NEW STORY BINDER FOLDER
-       ======================================================== -->
-  <div id="folderModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-kraft rounded-sm rotate-1"></div>
-      
-      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
-        <i data-lucide="folder-plus" class="w-6 h-6"></i>
-      </div>
-      
-      <h3 class="text-xl font-serif text-forest text-center mb-1">New Story Binder</h3>
-      <p class="text-xs text-fadedInk text-center mb-5">Group all scraps from a manga, manhwa, or book together.</p>
-      
-      <form onsubmit="handleCreateCollection(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-[11px] font-medium text-fadedInk mb-1">Title / Series</label>
-          <input type="text" id="inputFolderTitle" required placeholder="e.g., Unsleep or Norwegian Wood" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-medium text-fadedInk mb-1">Author / Creator</label>
-          <input type="text" id="inputFolderCreator" placeholder="e.g., hyeonoe" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-medium text-fadedInk mb-1">Medium</label>
-          <select id="inputFolderType" class="w-full px-3 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
-            <option value="manga">📑 Manga / Manhwa</option>
-            <option value="book">📖 Physical Book</option>
-            <option value="anime">🎬 Anime</option>
-          </select>
-        </div>
-
-        <div class="pt-2 flex items-center justify-end gap-2 border-t border-kraftDark/30">
-          <button type="button" onclick="closeFolderModal()" class="px-3.5 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
-          <button type="submit" id="saveFolderBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Create Binder</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       MODAL: MOVE SCRAP TO BINDER (NEW INTERACTIVE SHEET)
-       ======================================================== -->
-  <div id="moveScrapModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
-
-      <div class="flex items-center justify-between mb-3 border-b border-kraftDark/40 pb-3">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-forest">
-            <i data-lucide="folder-input" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-serif text-forest font-semibold">Move to Binder</h3>
-            <p id="moveScrapModalSub" class="text-[10px] text-fadedInk truncate max-w-[190px]">Select a destination folder</p>
-          </div>
-        </div>
-        <button onclick="closeMoveScrapModal()" class="w-7 h-7 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
-        </button>
-      </div>
-
-      <!-- Binder list -->
-      <div id="moveScrapList" class="space-y-1.5 max-h-56 overflow-y-auto no-scrollbar py-1"></div>
-
-      <div class="mt-4 pt-3 border-t border-kraftDark/40 flex items-center justify-between">
-        <button onclick="openFolderModal(); closeMoveScrapModal();" class="text-xs text-sage-700 hover:text-forest font-medium flex items-center gap-1">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-          <span>+ Create New Binder</span>
-        </button>
-        <button onclick="closeMoveScrapModal()" class="text-xs text-fadedInk hover:text-ink">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       MODAL: INSPECT ENTRY (CLOSE-UP VIEW)
+       MODAL: INSPECT ENTRY (CLOSE-UP VIEW - TIER 1 MODAL z-50)
        ======================================================== -->
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
@@ -487,8 +410,8 @@
         <div class="flex items-center gap-2 flex-wrap">
           <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
           
-          <!-- Binder Folder Quick Move Badge -->
-          <button id="inspectFolderMoveBtn" onclick="openMoveScrapFromInspect()" class="text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/70 bg-white/70 hover:bg-white text-forest transition flex items-center gap-1.5 cursor-pointer shadow-sm" title="Move to a binder folder">
+          <!-- Binder Folder Move Badge Button -->
+          <button id="inspectFolderMoveBtn" onclick="openMoveScrapFromInspect()" class="text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/70 bg-white/70 hover:bg-white text-forest transition flex items-center gap-1.5 cursor-pointer shadow-sm hover:border-sage-500" title="Move to a binder folder">
             <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700"></i>
             <span id="inspectFolderMoveName">Unassigned</span>
           </button>
@@ -554,7 +477,7 @@
         <div class="pt-4 border-t border-kraftDark/40 flex items-center justify-between text-xs">
           <span class="font-hand text-lg text-sage-700">Tone: <span id="inspectMood" class="font-semibold capitalize"></span></span>
           <button id="inspectDeleteBtn" onclick="deleteFromInspect()" class="text-xs text-rose-700 hover:text-rose-900 font-medium flex items-center gap-1 cursor-pointer">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             <span>Tear Scrap</span>
           </button>
         </div>
@@ -564,7 +487,84 @@
   </div>
 
   <!-- ========================================================
-       MODAL: AUTH
+       MODAL: MOVE SCRAP TO BINDER (TIER 2 SUB-MODAL z-[70] - FLOATS IN FRONT)
+       ======================================================== -->
+  <div id="moveScrapModal" class="apple-modal-backdrop fixed inset-0 z-[70] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/60 p-6 shadow-2xl">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-gingham-green rounded-sm rotate-1"></div>
+
+      <div class="flex items-center justify-between mb-3 border-b border-kraftDark/40 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-forest">
+            <i data-lucide="folder-input" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-serif text-forest font-semibold">Move to Binder</h3>
+            <p id="moveScrapModalSub" class="text-[10px] text-fadedInk truncate max-w-[190px]">Select a destination folder</p>
+          </div>
+        </div>
+        <button onclick="closeMoveScrapModal()" class="w-7 h-7 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Binder list -->
+      <div id="moveScrapList" class="space-y-1.5 max-h-56 overflow-y-auto no-scrollbar py-1"></div>
+
+      <div class="mt-4 pt-3 border-t border-kraftDark/40 flex items-center justify-between">
+        <button onclick="openFolderModal(); closeMoveScrapModal();" class="text-xs text-sage-700 hover:text-forest font-medium flex items-center gap-1">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>+ Create New Binder</span>
+        </button>
+        <button onclick="closeMoveScrapModal()" class="text-xs text-fadedInk hover:text-ink">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: CREATE NEW STORY BINDER (TIER 2 SUB-MODAL z-[75])
+       ======================================================== -->
+  <div id="folderModal" class="apple-modal-backdrop fixed inset-0 z-[75] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/60 p-6 shadow-2xl">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-kraft rounded-sm rotate-1"></div>
+      
+      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-sage-100 flex items-center justify-center text-forest">
+        <i data-lucide="folder-plus" class="w-6 h-6"></i>
+      </div>
+      
+      <h3 class="text-xl font-serif text-forest text-center mb-1">New Story Binder</h3>
+      <p class="text-xs text-fadedInk text-center mb-5">Group all scraps from a manga, manhwa, or book together.</p>
+      
+      <form onsubmit="handleCreateCollection(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Title / Series</label>
+          <input type="text" id="inputFolderTitle" required placeholder="e.g., Unsleep or Norwegian Wood" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Author / Creator</label>
+          <input type="text" id="inputFolderCreator" placeholder="e.g., hyeonoe" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-fadedInk mb-1">Medium</label>
+          <select id="inputFolderType" class="w-full px-3 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500 text-ink">
+            <option value="manga">📑 Manga / Manhwa</option>
+            <option value="book">📖 Physical Book</option>
+            <option value="anime">🎬 Anime</option>
+          </select>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-kraftDark/30">
+          <button type="button" onclick="closeFolderModal()" class="px-3.5 py-2 text-xs font-medium text-fadedInk hover:text-ink">Cancel</button>
+          <button type="submit" id="saveFolderBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition">Create Binder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: AUTH (TIER 1 MODAL z-50)
        ======================================================== -->
   <div id="authModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
@@ -604,10 +604,10 @@
   </div>
 
   <!-- ========================================================
-       MODAL: CONFIRMATION
+       MODAL: CONFIRMATION (TIER 2 SUB-MODAL z-[80])
        ======================================================== -->
-  <div id="confirmModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="apple-modal-card relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center">
+  <div id="confirmModal" class="apple-modal-backdrop fixed inset-0 z-[80] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-modal-card relative w-full max-w-xs bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 p-6 text-center shadow-2xl">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-5 washi-kraft rounded-sm rotate-2"></div>
       <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-red-100/70 flex items-center justify-center text-red-700">
         <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -622,7 +622,7 @@
   </div>
 
   <!-- ========================================================
-       MODAL: ADD ENTRY
+       MODAL: ADD ENTRY (TIER 1 MODAL z-50)
        ======================================================== -->
   <div id="entryModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-lg bg-parchment rounded-2xl paper-shadow border border-kraftDark/50 overflow-hidden">
@@ -774,7 +774,7 @@
     let authMode = 'signin';
     let pendingDeleteId = null;
     let inspectingEntry = null;
-    let movingEntryId = null; // ID of the scrap currently moving to a folder
+    let movingEntryId = null;
     let selectedFile = null;
     let detectedOrientation = 'auto';
     let isPublicMode = true;
@@ -964,7 +964,7 @@
       }
     });
 
-    // MODAL CONTROLLERS
+    // MODAL VISIBILITY
     function openNewEntryModal() { 
       populateCollectionDropdown();
       entryModal.classList.add('is-active'); 
@@ -1071,7 +1071,6 @@
       } else {
         if (targetEntry) targetEntry.collection_id = destinationColId;
 
-        // If inspect sheet is currently open on this scrap, update its badge label
         if (inspectingEntry && inspectingEntry.id === targetId) {
           inspectingEntry.collection_id = destinationColId;
           updateInspectFolderBadge(destinationColId);
@@ -1784,7 +1783,6 @@
           locator: entry.locator
         }));
 
-        // Find linked binder title if present
         const linkedCol = collections.find(c => c.id === entry.collection_id);
 
         return `
@@ -1860,7 +1858,6 @@
               </span>
               
               <div class="flex items-center gap-2">
-                <!-- Quick Move to Binder Button -->
                 <button onclick="openMoveScrapModal('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-forest transition-opacity p-1 cursor-pointer" title="Move to a binder">
                   <i data-lucide="folder-input" class="w-4 h-4"></i>
                 </button>
