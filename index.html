@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="Folio">
   <meta name="theme-color" content="#243324">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%23243324'/%3E%3Cpath d='M60 24C42 40 34 62 42 82C46 91 54 96 60 96C66 96 74 91 78 82C86 62 78 40 60 24Z' fill='%23A7C1A5'/%3E%3Cpath d='M60 36V96' stroke='%23243324' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M60 56L47 46M60 70L73 58M60 80L48 70' stroke='%23243324' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23243324'/%3E%3Cpath d='M90 36C63 60 51 93 63 123C69 136 81 144 90 144C99 144 111 136 117 123C129 93 117 60 90 36Z' fill='%23A7C1A5'/%3E%3Cpath d='M90 54V144' stroke='%23243324' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M90 84L70 69M90 105L110 87M90 120L72 105' stroke='%23243324' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -855,7 +855,7 @@
 
     let currentUser = null;
     let authMode = 'signin';
-    let confirmActionType = 'scrap'; // 'scrap' or 'folder'
+    let confirmActionType = 'scrap';
     let pendingDeleteId = null;
     let editingCollectionId = null;
     let inspectingEntry = null;
@@ -864,7 +864,7 @@
     let compressedBlob = null;
     let detectedOrientation = 'auto';
     let isPublicMode = true;
-    let sortAscending = false; // false = Newest First, true = Chronological Reading Order
+    let sortAscending = false;
     let searchQuery = '';
     
     let entries = [];
@@ -1003,7 +1003,6 @@
       const shieldIcon = document.getElementById('shieldIcon');
       const label = document.getElementById('publicShieldLabel');
 
-      // Reset any temporarily peeked cards when toggling
       document.querySelectorAll('.sensitive-wrapper.is-peeked').forEach(el => el.classList.remove('is-peeked'));
 
       if (isPublicMode) {
@@ -1029,19 +1028,15 @@
       const entry = entries.find(item => item.id === entryId);
       if (!entry) return;
 
-      // If Public Mode is active and this entry is sensitive and not yet peeked
       if (isPublicMode && entry.is_sensitive && !wrapperEl.classList.contains('is-peeked')) {
-        // Unblur only this polaroid first
         document.querySelectorAll('.sensitive-wrapper.is-peeked').forEach(el => el.classList.remove('is-peeked'));
         wrapperEl.classList.add('is-peeked');
 
-        // Also update Dynamic Island on touch devices
         let badge = entry.media_type === 'manga' ? 'MANGA' : (entry.media_type === 'anime' ? 'ANIME' : 'BOOK');
         setIslandDisplay(badge, entry.title, entry.locator, true);
         return;
       }
 
-      // Second tap (or non-sensitive) opens the full inspect modal
       openInspectModal(entryId);
     }
 
@@ -1700,7 +1695,6 @@
             let width = img.naturalWidth;
             let height = img.naturalHeight;
 
-            // Detect orientation before resizing
             const isVertical = height > width * 1.1;
 
             if (width > maxDimension || height > maxDimension) {
