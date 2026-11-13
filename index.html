@@ -72,11 +72,11 @@
       transition: background-color 0.45s ease;
     }
 
-    /* Subtle warm binder ambiance when inside a specific folder */
+    /* Warm botanical binder desk tint when inside the dedicated Binder Screen */
     body.in-binder-mode .bg-dot-grid,
     body.in-binder-mode {
-      background-color: #F2F5F0;
-      background-image: radial-gradient(#B5C6B3 1.2px, transparent 1.2px);
+      background-color: #F0F4EF;
+      background-image: radial-gradient(#AFC3AD 1.2px, transparent 1.2px);
     }
 
     /* ========================================================
@@ -165,36 +165,36 @@
     }
 
     /* ========================================================
-       BINDER OPENING & PAGE-TURN ANIMATIONS
+       SCREEN VIEW TRANSITIONS (HOME SCREEN <-> BINDER SCREEN)
        ======================================================== */
-    @keyframes binderFlipIn {
+    @keyframes screenEnterRight {
       0% {
         opacity: 0;
-        transform: translateY(-10px) scale(0.97);
+        transform: translateX(28px) scale(0.985);
       }
       100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateX(0) scale(1);
       }
     }
 
-    .animate-binder-banner {
-      animation: binderFlipIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes pageTurnReveal {
+    @keyframes screenEnterLeft {
       0% {
         opacity: 0;
-        transform: translateY(14px) scale(0.985);
+        transform: translateX(-28px) scale(0.985);
       }
       100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateX(0) scale(1);
       }
     }
 
-    .animate-page-turn {
-      animation: pageTurnReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .animate-screen-forward {
+      animation: screenEnterRight 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-screen-back {
+      animation: screenEnterLeft 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes islandPulseRing {
@@ -238,7 +238,7 @@
 
     /* Dynamic Island */
     .dynamic-island {
-      width: 370px;
+      width: 380px;
       height: 48px;
       border-radius: 9999px;
       background-color: #243324;
@@ -257,7 +257,7 @@
 
     @media (min-width: 768px) {
       .dynamic-island {
-        width: 470px;
+        width: 490px;
         height: 52px;
       }
     }
@@ -433,14 +433,20 @@
   </div>
 
   <!-- ========================================================
-       DYNAMIC ISLAND (z-40)
+       PERSISTENT DYNAMIC ISLAND (z-40)
        ======================================================== -->
   <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none" style="top: calc(1.25rem + env(safe-area-inset-top));">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island is-booting text-parchment select-none">
       
       <!-- COLLAPSED LAYER -->
-      <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-4 md:px-5 flex items-center justify-between">
-        <div id="islandTriggerArea" class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer py-2 group" title="Click to open journal control center">
+      <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-4 md:px-5 flex items-center justify-between gap-2">
+        <!-- Quick Back Pill when inside a Binder Screen -->
+        <button id="islandBackBtn" onclick="exitBinderView(event)" class="hidden items-center gap-1 text-[11px] font-semibold bg-sage-700/80 hover:bg-sage-600 text-sage-100 px-2.5 py-1 rounded-full transition active:scale-90 cursor-pointer flex-shrink-0" title="Back to all scraps">
+          <i data-lucide="arrow-left" class="w-3 h-3 pointer-events-none"></i>
+          <span>All</span>
+        </button>
+
+        <div id="islandTriggerArea" class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer py-2 group" title="Click to open journal control center">
           <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform" title="Checking sync..."></div>
           <span class="text-xs md:text-sm font-medium tracking-wide text-sage-200 flex items-center gap-2 truncate">
             <span id="islandMediaBadge" class="island-text-anim text-[10px] md:text-[11px] bg-sage-700/70 text-sage-100 px-2.5 py-0.5 rounded-full font-sans uppercase tracking-wider flex-shrink-0 font-semibold">Sync</span>
@@ -448,7 +454,7 @@
           </span>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-2.5 pl-3 border-l border-sage-700/60 flex-shrink-0">
+        <div class="flex items-center gap-2 pl-2.5 border-l border-sage-700/60 flex-shrink-0">
           <span class="island-text-anim text-xs font-reader italic text-sage-300 hidden sm:inline" id="islandProgress">—</span>
 
           <button id="quickShieldBtn" onclick="togglePublicMode(event)" class="w-8 h-8 rounded-full bg-sage-800/80 hover:bg-sage-700 text-sage-300 flex items-center justify-center transition active:scale-90 cursor-pointer" title="Toggle Public Mode (Blur 18+)">
@@ -484,10 +490,10 @@
         </div>
 
         <div class="grid grid-cols-4 gap-2 my-1">
-          <button onclick="setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
-          <button onclick="setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
-          <button onclick="setFilter('manga'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📑 Manga</button>
-          <button onclick="setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
+          <button onclick="exitBinderView(); setFilter('all'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">All</button>
+          <button onclick="exitBinderView(); setFilter('book'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📖 Books</button>
+          <button onclick="exitBinderView(); setFilter('manga'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">📑 Manga</button>
+          <button onclick="exitBinderView(); setFilter('anime'); closeIsland();" class="text-xs py-2 rounded-xl bg-sage-800/70 hover:bg-sage-700 text-sage-200 text-center font-medium transition cursor-pointer active:scale-95">🎬 Anime</button>
         </div>
 
         <div class="flex items-center justify-between pt-2 border-t border-sage-700/50">
@@ -509,129 +515,180 @@
   </header>
 
   <!-- ========================================================
-       MAIN SCRAPBOOK PAGE CONTAINER
+       MAIN APPLICATION SHELL
        ======================================================== -->
   <main id="appMainShell" class="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32">
-    <section class="relative mb-8 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-100/90 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
-          <i data-lucide="leaf" class="w-3.5 h-3.5"></i>
-          <span>Leaves & Marginalia</span>
+
+    <!-- ======================================================
+         SCREEN 1: MAIN JOURNAL HOME VIEW
+         ====================================================== -->
+    <div id="homeScreenView">
+      <section class="relative mb-8 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-100/90 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
+            <i data-lucide="leaf" class="w-3.5 h-3.5"></i>
+            <span>Leaves & Marginalia</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif text-forest tracking-tight">
+            Unsaid Thoughts.
+          </h1>
+          <p class="font-hand text-xl sm:text-2xl text-sage-700 mt-1 transform -rotate-1">
+            Reflections from the books, panels & scenes that linger.
+          </p>
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif text-forest tracking-tight">
-          Unsaid Thoughts.
-        </h1>
-        <p class="font-hand text-xl sm:text-2xl text-sage-700 mt-1 transform -rotate-1">
-          Reflections from the books, panels & scenes that linger.
-        </p>
-      </div>
 
-      <div class="flex items-center gap-2.5">
-        <button onclick="openFolderModal()" class="px-4 py-2.5 bg-parchmentDark hover:bg-kraft text-forest border border-kraftDark rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer" title="Create a new binder folder">
-          <i data-lucide="folder-plus" class="w-4 h-4 text-sage-700"></i>
-          <span>New Binder</span>
-        </button>
+        <div class="flex items-center gap-2.5">
+          <button onclick="openFolderModal()" class="px-4 py-2.5 bg-parchmentDark hover:bg-kraft text-forest border border-kraftDark rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer" title="Create a new binder folder">
+            <i data-lucide="folder-plus" class="w-4 h-4 text-sage-700"></i>
+            <span>New Binder</span>
+          </button>
 
-        <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer">
-          <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
-          <span>Add New Scrap</span>
-        </button>
-      </div>
-    </section>
+          <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
+            <span>Add New Scrap</span>
+          </button>
+        </div>
+      </section>
 
-    <!-- BINDER FOLDERS SHELF -->
-    <section class="mb-7">
-      <div class="flex items-center justify-between mb-3 px-1">
-        <span class="text-xs font-semibold uppercase tracking-wider text-fadedInk flex items-center gap-1.5">
-          <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700"></i>
-          <span>Story Binders & Series</span>
-        </span>
-        <button id="clearFolderFilterBtn" onclick="selectCollection(null)" class="hidden text-xs text-sage-700 hover:text-forest underline font-medium cursor-pointer">
-          Show All Scraps (Exit Binder)
-        </button>
-      </div>
+      <!-- BINDER FOLDERS SHELF -->
+      <section class="mb-7">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <span class="text-xs font-semibold uppercase tracking-wider text-fadedInk flex items-center gap-1.5">
+            <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700"></i>
+            <span>Story Binders & Series</span>
+          </span>
+          <span class="text-[11px] font-hand text-fadedInk">Tap a binder to open its dedicated desk →</span>
+        </div>
 
-      <div id="foldersShelf" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2"></div>
-    </section>
+        <div id="foldersShelf" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2"></div>
+      </section>
 
-    <!-- FILTERS, SEARCH & SORT BAR -->
-    <section class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 mb-6">
-      <!-- Media Filters -->
-      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-        <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0">
-          All Readings
-        </button>
-        <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
-          📖 Books
-        </button>
-        <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
-          📑 Manga
-        </button>
-        <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
-          🎬 Anime
-        </button>
-      </div>
-
-      <!-- Instant Search & Reading Order Sort -->
-      <div class="flex items-center gap-2">
-        <div class="relative flex-1 md:w-52">
-          <i data-lucide="search" class="w-3.5 h-3.5 text-fadedInk absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-          <input 
-            type="text" 
-            id="searchInput" 
-            oninput="handleSearchInput(this.value)" 
-            placeholder="Search scraps..." 
-            class="w-full pl-8 pr-7 py-1.5 text-xs bg-white/80 border border-kraftDark/60 rounded-full focus:outline-none focus:ring-1 focus:ring-sage-500 placeholder:text-fadedInk/70 text-ink"
-          >
-          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-fadedInk hover:text-ink cursor-pointer">
-            <i data-lucide="x" class="w-3 h-3"></i>
+      <!-- FILTERS, SEARCH & SORT BAR -->
+      <section class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 mb-6">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0">
+            All Readings
+          </button>
+          <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+            📖 Books
+          </button>
+          <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+            📑 Manga
+          </button>
+          <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+            🎬 Anime
           </button>
         </div>
 
-        <button id="sortOrderBtn" onclick="toggleSortOrder()" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white/80 hover:bg-white text-forest border border-kraftDark/60 flex items-center gap-1.5 transition cursor-pointer flex-shrink-0 shadow-sm" title="Switch between Newest First and Chronological Reading Order">
-          <i id="sortOrderIcon" data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5 text-sage-700"></i>
-          <span id="sortOrderLabel">Newest</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Active Binder Banner (Tactile Open-Notebook Header with Quick Add-to-Binder) -->
-    <div id="activeFolderBanner" class="hidden mb-8 p-4 sm:p-5 rounded-2xl bg-white/90 border-2 border-sage-500/40 paper-shadow items-center justify-between gap-3 relative overflow-hidden">
-      <div class="absolute left-0 top-0 bottom-0 w-2 bg-forest"></div>
-      <div class="flex items-center gap-3.5 min-w-0 pl-2">
-        <div class="w-11 h-11 rounded-xl bg-forest text-parchment flex items-center justify-center text-xl shadow-sm flex-shrink-0">
-          📂
-        </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-sage-700 bg-sage-100 px-2 py-0.5 rounded-full">Inside Binder</span>
-            <span id="activeFolderCountPill" class="text-[11px] font-mono text-fadedInk">0 scraps</span>
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1 md:w-52">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-fadedInk absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input 
+              type="text" 
+              id="searchInput" 
+              oninput="handleSearchInput(this.value)" 
+              placeholder="Search all scraps..." 
+              class="w-full pl-8 pr-7 py-1.5 text-xs bg-white/80 border border-kraftDark/60 rounded-full focus:outline-none focus:ring-1 focus:ring-sage-500 placeholder:text-fadedInk/70 text-ink"
+            >
+            <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-fadedInk hover:text-ink cursor-pointer">
+              <i data-lucide="x" class="w-3 h-3"></i>
+            </button>
           </div>
-          <h3 id="activeFolderTitle" class="font-serif text-xl sm:text-2xl text-forest font-semibold leading-tight truncate mt-0.5"></h3>
-          <p id="activeFolderMeta" class="text-xs text-fadedInk truncate"></p>
+
+          <button id="sortOrderBtn" onclick="toggleSortOrder()" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white/80 hover:bg-white text-forest border border-kraftDark/60 flex items-center gap-1.5 transition cursor-pointer flex-shrink-0 shadow-sm" title="Switch between Newest First and Chronological Reading Order">
+            <i id="sortOrderIcon" data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5 text-sage-700"></i>
+            <span id="sortOrderLabel">Newest</span>
+          </button>
         </div>
-      </div>
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <button onclick="checkAuthAndOpenModal()" class="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-forest hover:bg-sage-900 text-parchment text-xs font-medium shadow-sm transition active:scale-95 cursor-pointer" title="Add a scrap directly into this binder">
-          <i data-lucide="plus" class="w-3.5 h-3.5 text-sage-300"></i>
-          <span>Add Here</span>
-        </button>
-        <button onclick="openEditFolderModal()" class="p-2 rounded-lg bg-parchment hover:bg-kraft/50 text-sage-700 hover:text-forest border border-kraftDark/50 transition cursor-pointer" title="Edit Binder">
-          <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-        </button>
-        <button onclick="promptDeleteFolder()" class="p-2 rounded-lg bg-parchment hover:bg-rose-50 text-fadedInk hover:text-rose-700 border border-kraftDark/50 transition cursor-pointer" title="Delete Binder">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-        </button>
-        <button onclick="selectCollection(null)" class="text-xs font-semibold text-forest bg-sage-100 hover:bg-sage-200 px-3 py-2 rounded-lg transition cursor-pointer">
-          Exit
-        </button>
-      </div>
+      </section>
     </div>
 
-    <!-- SCRAPBOOK CARDS GRID -->
+    <!-- ======================================================
+         SCREEN 2: DEDICATED STORY BINDER WORKSPACE VIEW
+         ====================================================== -->
+    <div id="binderScreenView" class="hidden pt-2">
+      <!-- Top Navigation Bar inside Binder Screen -->
+      <div class="flex items-center justify-between mb-6">
+        <button onclick="exitBinderView()" class="group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 hover:bg-white text-forest border border-kraftDark/70 paper-shadow text-xs font-semibold transition active:scale-95 cursor-pointer">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-sage-700 group-hover:-translate-x-0.5 transition-transform"></i>
+          <span>Back to All Scraps</span>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openEditFolderModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/85 hover:bg-white text-sage-700 hover:text-forest border border-kraftDark/60 text-xs font-medium transition cursor-pointer shadow-sm" title="Rename or edit this binder">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Edit Binder</span>
+          </button>
+          <button onclick="promptDeleteFolder()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/85 hover:bg-rose-50 text-fadedInk hover:text-rose-700 border border-kraftDark/60 text-xs font-medium transition cursor-pointer shadow-sm" title="Delete this binder">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Delete</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dedicated Notebook / Binder Hero Card -->
+      <section class="relative bg-white/95 rounded-3xl p-6 sm:p-8 paper-shadow border border-kraftDark/50 mb-8 overflow-hidden">
+        <!-- Decorative Left Binder Spine -->
+        <div class="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-b from-forest via-sage-900 to-forest"></div>
+        <!-- Decorative Washi Tape -->
+        <div class="absolute -top-3 right-10 w-28 h-6 washi-kraft rounded-sm rotate-2 pointer-events-none"></div>
+
+        <div class="pl-3 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <div class="flex items-center gap-2 mb-2.5">
+              <span id="binderScreenBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-sage-100 text-forest border border-sage-200">
+                📖 Book Binder
+              </span>
+              <span id="binderScreenCount" class="text-xs font-mono text-fadedInk bg-parchment px-2.5 py-0.5 rounded-md border border-kraftDark/40">
+                0 scraps
+              </span>
+            </div>
+
+            <h1 id="binderScreenTitle" class="text-3xl sm:text-4xl font-serif text-forest tracking-tight leading-tight">
+              Binder Title
+            </h1>
+            <p id="binderScreenCreator" class="font-hand text-xl sm:text-2xl text-sage-700 mt-1">
+              by Author / Creator
+            </p>
+          </div>
+
+          <div class="flex-shrink-0">
+            <button onclick="checkAuthAndOpenModal()" class="w-full sm:w-auto px-5 py-3 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-sm font-medium cursor-pointer">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-sage-300"></i>
+              <span>Add Scrap to Binder</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scoped Search & Reading Order Bar inside Binder Screen -->
+        <div class="pl-3 mt-6 pt-5 border-t border-kraftDark/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-fadedInk absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input 
+              type="text" 
+              id="binderSearchInput" 
+              oninput="handleSearchInput(this.value)" 
+              placeholder="Search chapters, quotes, or thoughts inside this binder..." 
+              class="w-full pl-9 pr-8 py-2 text-xs bg-parchment/70 border border-kraftDark/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-sage-500 placeholder:text-fadedInk/70 text-ink"
+            >
+            <button id="clearBinderSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-fadedInk hover:text-ink cursor-pointer">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <button id="binderSortOrderBtn" onclick="toggleSortOrder()" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-parchment/80 hover:bg-parchment text-forest border border-kraftDark/50 flex items-center justify-center gap-1.5 transition cursor-pointer flex-shrink-0">
+            <i id="binderSortOrderIcon" data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5 text-sage-700"></i>
+            <span id="binderSortOrderLabel">Newest First</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======================================================
+         SHARED SCRAPBOOK CARDS GRID & EMPTY STATE
+         ====================================================== -->
     <div id="journalGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"></div>
 
-    <!-- Empty State -->
     <div id="emptyState" class="hidden text-center py-20 px-4">
       <div id="emptyStateIconBox" class="w-16 h-16 mx-auto mb-4 rounded-full bg-sage-100 flex items-center justify-center text-sage-500">
         <i data-lucide="book-open" class="w-8 h-8"></i>
@@ -640,6 +697,7 @@
       <p id="emptyStateSub" class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded here yet.</p>
       <button id="emptyStateCtaBtn" onclick="checkAuthAndOpenModal()" class="mt-4 px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl text-xs font-medium shadow-sm transition active:scale-95 cursor-pointer">Add First Thought</button>
     </div>
+
   </main>
 
   <!-- ========================================================
@@ -1062,6 +1120,8 @@
     const islandWriteBtn = document.getElementById('islandWriteBtn');
     const authBtn = document.getElementById('authBtn');
 
+    const homeScreenEl = document.getElementById('homeScreenView');
+    const binderScreenEl = document.getElementById('binderScreenView');
     const gridEl = document.getElementById('journalGrid');
     const foldersShelfEl = document.getElementById('foldersShelf');
     const emptyStateEl = document.getElementById('emptyState');
@@ -1163,7 +1223,7 @@
 
     function pingDynamicIsland() {
       dynamicIsland.classList.remove('is-binder-ping');
-      void dynamicIsland.offsetWidth; // trigger reflow to restart animation
+      void dynamicIsland.offsetWidth;
       dynamicIsland.classList.add('is-binder-ping');
     }
 
@@ -1198,6 +1258,85 @@
         openIsland();
       }
     });
+
+    // ========================================================
+    // DEDICATED BINDER SCREEN NAVIGATION (HOME <-> BINDER VIEW)
+    // ========================================================
+    function enterBinderView(collectionId) {
+      const col = collections.find(c => c.id === collectionId);
+      if (!col) return;
+
+      selectedCollectionId = collectionId;
+      clearSearch(); // Reset search when entering a dedicated binder
+
+      const count = entries.filter(e => e.collection_id === col.id).length;
+      document.body.classList.add('in-binder-mode');
+
+      // Populate Binder Hero Card
+      let badgeLabel = '📖 Physical Book Binder';
+      if (col.media_type === 'manga') badgeLabel = '📑 Manga / Manhwa Binder';
+      if (col.media_type === 'anime') badgeLabel = '🎬 Anime Series Binder';
+
+      document.getElementById('binderScreenBadge').textContent = badgeLabel;
+      document.getElementById('binderScreenCount').textContent = `${count} scrap${count === 1 ? '' : 's'}`;
+      document.getElementById('binderScreenTitle').textContent = col.title;
+      document.getElementById('binderScreenCreator').textContent = col.creator ? `by ${col.creator}` : 'Personal Series Collection';
+
+      // Show Quick Back Pill in Dynamic Island
+      const islandBackBtn = document.getElementById('islandBackBtn');
+      islandBackBtn.classList.remove('hidden');
+      islandBackBtn.classList.add('flex');
+
+      // Switch Screen Views with Forward Slide Animation
+      homeScreenEl.classList.add('hidden');
+      binderScreenEl.classList.remove('hidden', 'animate-screen-forward');
+      void binderScreenEl.offsetWidth;
+      binderScreenEl.classList.add('animate-screen-forward');
+
+      // Animate Grid Transition
+      gridEl.classList.remove('animate-screen-forward');
+      void gridEl.offsetWidth;
+      gridEl.classList.add('animate-screen-forward');
+
+      setIslandDisplay("📂 BINDER", col.title, `${count} scrap${count === 1 ? '' : 's'}`, true);
+      pingDynamicIsland();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      render();
+      lucide.createIcons();
+    }
+
+    function exitBinderView(e) {
+      if (e) e.stopPropagation();
+      if (!selectedCollectionId) return;
+
+      selectedCollectionId = null;
+      clearSearch();
+      document.body.classList.remove('in-binder-mode');
+
+      // Hide Quick Back Pill in Dynamic Island
+      const islandBackBtn = document.getElementById('islandBackBtn');
+      islandBackBtn.classList.add('hidden');
+      islandBackBtn.classList.remove('flex');
+
+      // Switch Back to Home Screen with Return Slide Animation
+      binderScreenEl.classList.add('hidden');
+      homeScreenEl.classList.remove('hidden', 'animate-screen-back');
+      void homeScreenEl.offsetWidth;
+      homeScreenEl.classList.add('animate-screen-back');
+
+      gridEl.classList.remove('animate-screen-back');
+      void gridEl.offsetWidth;
+      gridEl.classList.add('animate-screen-back');
+
+      updateDynamicIsland();
+      pingDynamicIsland();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      render();
+      renderFoldersShelf();
+      lucide.createIcons();
+    }
 
     // PUBLIC MODE CONTROLLER
     function togglePublicMode(e) {
@@ -1284,42 +1423,57 @@
       }
     });
 
-    // SEARCH & CHRONOLOGICAL SORTING
+    // SEARCH & CHRONOLOGICAL SORTING (SYNCS BOTH HOME & BINDER INPUTS)
     function handleSearchInput(val) {
       searchQuery = val.trim().toLowerCase();
+      document.getElementById('searchInput').value = val;
+      document.getElementById('binderSearchInput').value = val;
+
       const clearBtn = document.getElementById('clearSearchBtn');
+      const clearBinderBtn = document.getElementById('clearBinderSearchBtn');
+
       if (searchQuery.length > 0) {
         clearBtn.classList.remove('hidden');
+        clearBinderBtn.classList.remove('hidden');
       } else {
         clearBtn.classList.add('hidden');
+        clearBinderBtn.classList.add('hidden');
       }
-      render(false);
+      render();
     }
 
     function clearSearch() {
       searchQuery = '';
       document.getElementById('searchInput').value = '';
+      document.getElementById('binderSearchInput').value = '';
       document.getElementById('clearSearchBtn').classList.add('hidden');
-      render(false);
+      document.getElementById('clearBinderSearchBtn').classList.add('hidden');
+      render();
     }
 
     function toggleSortOrder() {
       sortAscending = !sortAscending;
       const label = document.getElementById('sortOrderLabel');
       const icon = document.getElementById('sortOrderIcon');
+      const binderLabel = document.getElementById('binderSortOrderLabel');
+      const binderIcon = document.getElementById('binderSortOrderIcon');
 
       if (sortAscending) {
         label.textContent = 'Reading Order';
         icon.setAttribute('data-lucide', 'arrow-up-narrow-wide');
+        binderLabel.textContent = 'Reading Order (Ch. 1 →)';
+        binderIcon.setAttribute('data-lucide', 'arrow-up-narrow-wide');
       } else {
         label.textContent = 'Newest';
         icon.setAttribute('data-lucide', 'arrow-down-wide-narrow');
+        binderLabel.textContent = 'Newest First';
+        binderIcon.setAttribute('data-lucide', 'arrow-down-wide-narrow');
       }
       lucide.createIcons();
-      render(true);
+      render();
     }
 
-    // MODAL CONTROLLERS (AUTO-PREFILLS ACTIVE BINDER WHEN ADDING A SCRAP!)
+    // MODAL CONTROLLERS
     function openNewEntryModal() { 
       populateCollectionDropdown();
       entryModal.classList.add('is-active'); 
@@ -1500,7 +1654,7 @@
       }
     }
 
-    // FOLDERS / COLLECTIONS MANAGEMENT (WITH ANIMATED BINDER OPENING)
+    // FOLDERS / COLLECTIONS MANAGEMENT
     async function loadCollectionsFromCloud() {
       if (!currentUser) { collections = []; renderFoldersShelf(); return; }
       const { data, error } = await supabaseClient
@@ -1516,11 +1670,16 @@
           const activeCol = collections.find(c => c.id === selectedCollectionId);
           if (activeCol) {
             const count = entries.filter(e => e.collection_id === activeCol.id).length;
-            document.getElementById('activeFolderTitle').textContent = activeCol.title;
-            document.getElementById('activeFolderMeta').textContent = `${activeCol.creator ? activeCol.creator + ' • ' : ''}${activeCol.media_type.toUpperCase()}`;
-            document.getElementById('activeFolderCountPill').textContent = `${count} scrap${count === 1 ? '' : 's'}`;
+            let badgeLabel = '📖 Physical Book Binder';
+            if (activeCol.media_type === 'manga') badgeLabel = '📑 Manga / Manhwa Binder';
+            if (activeCol.media_type === 'anime') badgeLabel = '🎬 Anime Series Binder';
+
+            document.getElementById('binderScreenBadge').textContent = badgeLabel;
+            document.getElementById('binderScreenTitle').textContent = activeCol.title;
+            document.getElementById('binderScreenCreator').textContent = activeCol.creator ? `by ${activeCol.creator}` : 'Personal Series Collection';
+            document.getElementById('binderScreenCount').textContent = `${count} scrap${count === 1 ? '' : 's'}`;
           } else {
-            selectCollection(null);
+            exitBinderView();
           }
         }
       }
@@ -1574,54 +1733,11 @@
               movingEntryId = inspectingEntry.id;
               executeMoveScrap(data[0].id);
             } else {
-              selectCollection(data[0].id);
+              enterBinderView(data[0].id);
             }
           }
         }
       }
-    }
-
-    function selectCollection(collectionId) {
-      // Toggle off if clicking the already open binder
-      if (collectionId && selectedCollectionId === collectionId) {
-        collectionId = null;
-      }
-
-      selectedCollectionId = collectionId;
-      const banner = document.getElementById('activeFolderBanner');
-      const clearBtn = document.getElementById('clearFolderFilterBtn');
-
-      if (collectionId) {
-        const col = collections.find(c => c.id === collectionId);
-        if (col) {
-          const count = entries.filter(e => e.collection_id === col.id).length;
-          document.body.classList.add('in-binder-mode');
-
-          // Re-trigger banner slide-in animation cleanly
-          banner.classList.remove('hidden', 'animate-binder-banner');
-          banner.classList.add('flex');
-          void banner.offsetWidth;
-          banner.classList.add('animate-binder-banner');
-
-          clearBtn.classList.remove('hidden');
-          document.getElementById('activeFolderTitle').textContent = col.title;
-          document.getElementById('activeFolderMeta').textContent = `${col.creator ? col.creator + ' • ' : ''}${col.media_type.toUpperCase()}`;
-          document.getElementById('activeFolderCountPill').textContent = `${count} scrap${count === 1 ? '' : 's'}`;
-
-          setIslandDisplay("📂 BINDER", col.title, `${count} scrap${count === 1 ? '' : 's'}`, true);
-          pingDynamicIsland();
-        }
-      } else {
-        document.body.classList.remove('in-binder-mode');
-        banner.classList.add('hidden');
-        banner.classList.remove('flex', 'animate-binder-banner');
-        clearBtn.classList.add('hidden');
-        updateDynamicIsland();
-        pingDynamicIsland();
-      }
-
-      render(true);
-      renderFoldersShelf();
     }
 
     function populateCollectionDropdown() {
@@ -1659,28 +1775,20 @@
 
       foldersShelfEl.innerHTML = collections.map(col => {
         const scrapCount = entries.filter(e => e.collection_id === col.id).length;
-        const isSelected = selectedCollectionId === col.id;
         
         return `
-          <div onclick="selectCollection('${col.id}')" class="cursor-pointer group flex-shrink-0 px-4 py-2.5 rounded-xl border transition-all duration-300 ease-out paper-shadow flex items-center gap-2.5 select-none active:scale-95 ${
-            isSelected 
-              ? 'bg-forest text-parchment border-forest ring-2 ring-sage-400/60 shadow-lg -translate-y-0.5' 
-              : 'bg-white/85 hover:bg-white text-ink border-kraftDark/50 hover:border-sage-500 hover:-translate-y-0.5'
-          }">
-            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-transform duration-300 ${isSelected ? 'bg-sage-700 text-sage-100 scale-110' : 'bg-sage-100 text-forest'}">
-              ${isSelected ? '📂' : '📁'}
+          <div onclick="enterBinderView('${col.id}')" class="cursor-pointer group flex-shrink-0 px-4 py-2.5 rounded-xl border bg-white/85 hover:bg-white text-ink border-kraftDark/50 hover:border-sage-500 hover:-translate-y-0.5 transition-all duration-200 paper-shadow flex items-center gap-2.5 select-none active:scale-95">
+            <div class="w-8 h-8 rounded-lg bg-sage-100 group-hover:bg-forest group-hover:text-parchment text-forest flex items-center justify-center text-sm transition-colors">
+              📁
             </div>
             <div>
-              <div class="flex items-center gap-1.5">
-                <p class="text-xs font-semibold leading-tight truncate max-w-[140px]">${escapeHtml(col.title)}</p>
-                ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>' : ''}
-              </div>
-              <p class="text-[10px] ${isSelected ? 'text-sage-300' : 'text-fadedInk'} mt-0.5">${isSelected ? 'Open • ' : ''}${scrapCount} scrap${scrapCount === 1 ? '' : 's'}</p>
+              <p class="text-xs font-semibold leading-tight truncate max-w-[150px] group-hover:text-forest">${escapeHtml(col.title)}</p>
+              <p class="text-[10px] text-fadedInk mt-0.5">${scrapCount} scrap${scrapCount === 1 ? '' : 's'}</p>
             </div>
           </div>
         `;
       }).join('') + `
-        <button onclick="openFolderModal()" class="flex-shrink-0 w-9 h-9 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-fadedInk hover:text-forest flex items-center justify-center transition cursor-pointer" title="Add another folder">
+        <button onclick="openFolderModal()" class="flex-shrink-0 w-10 h-10 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-fadedInk hover:text-forest flex items-center justify-center transition cursor-pointer" title="Add another folder">
           <i data-lucide="plus" class="w-4 h-4"></i>
         </button>
       `;
@@ -1696,7 +1804,7 @@
 
       const newStatus = !entry.is_sensitive;
       entry.is_sensitive = newStatus;
-      render(false);
+      render();
 
       const { error } = await supabaseClient
         .from('entries')
@@ -2145,9 +2253,8 @@
       await supabaseClient.auth.signOut();
       entries = [];
       collections = [];
-      selectedCollectionId = null;
-      document.body.classList.remove('in-binder-mode');
-      render(false);
+      if (selectedCollectionId) exitBinderView();
+      render();
       renderFoldersShelf();
       showToast("Signed Out", "Your thoughts remain safe in the cloud.", "success");
     }
@@ -2156,7 +2263,7 @@
     async function loadEntriesFromCloud() {
       if (!currentUser) {
         entries = [];
-        render(false);
+        render();
         updateDynamicIsland();
         return;
       }
@@ -2172,13 +2279,17 @@
       }
 
       entries = data || [];
-      render(false);
+      render();
       renderFoldersShelf();
       updateDynamicIsland();
 
       if (selectedCollectionId) {
         const count = entries.filter(e => e.collection_id === selectedCollectionId).length;
-        document.getElementById('activeFolderCountPill').textContent = `${count} scrap${count === 1 ? '' : 's'}`;
+        document.getElementById('binderScreenCount').textContent = `${count} scrap${count === 1 ? '' : 's'}`;
+        const col = collections.find(c => c.id === selectedCollectionId);
+        if (col && !activeHoverScrap) {
+          setIslandDisplay("📂 BINDER", col.title, `${count} scrap${count === 1 ? '' : 's'}`, true);
+        }
       }
     }
 
@@ -2273,7 +2384,7 @@
         if (error) {
           showToast("Delete Error", error.message, "error");
         } else {
-          selectCollection(null);
+          exitBinderView();
           await loadCollectionsFromCloud();
           await loadEntriesFromCloud();
           showToast("Binder Deleted", "Scraps inside were kept as standalone.", "success");
@@ -2289,7 +2400,7 @@
       }
     });
 
-    // RENDER & FILTERING (WITH PAGE-TURN TRANSITION)
+    // RENDER & FILTERING
     function setFilter(type) {
       currentFilter = type;
       document.querySelectorAll('.filter-pill').forEach(btn => {
@@ -2299,7 +2410,7 @@
           btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0";
         }
       });
-      render(true);
+      render();
     }
 
     function updateDynamicIsland() {
@@ -2327,21 +2438,12 @@
       }
     }
 
-    function triggerPageTurnAnimation(element) {
-      if (!element) return;
-      element.classList.remove('animate-page-turn');
-      void element.offsetWidth;
-      element.classList.add('animate-page-turn');
-    }
-
-    function render(animateTransition = false) {
+    function render() {
       let filtered = [...entries];
 
       if (selectedCollectionId) {
         filtered = filtered.filter(e => e.collection_id === selectedCollectionId);
-      }
-
-      if (currentFilter !== 'all') {
+      } else if (currentFilter !== 'all') {
         filtered = filtered.filter(e => e.media_type === currentFilter);
       }
 
@@ -2366,11 +2468,11 @@
         if (selectedCollectionId) {
           const activeCol = collections.find(c => c.id === selectedCollectionId);
           const colName = activeCol ? activeCol.title : 'this binder';
-          document.getElementById('emptyStateTitle').textContent = `Inside "${colName}"`;
+          document.getElementById('emptyStateTitle').textContent = `This binder is empty`;
           document.getElementById('emptyStateSub').textContent = searchQuery 
-            ? `No scraps matching "${searchQuery}" in this binder.` 
-            : `This binder is open and ready—add your first scrap for ${colName}.`;
-          document.getElementById('emptyStateCtaBtn').textContent = `Add Scrap to ${colName}`;
+            ? `No scraps matching "${searchQuery}" in ${colName}.` 
+            : `Start adding your favorite quotes, panels, and thoughts for ${colName}.`;
+          document.getElementById('emptyStateCtaBtn').textContent = `Add First Scrap to ${colName}`;
         } else {
           document.getElementById('emptyStateTitle').textContent = 'A clean, blank page';
           document.getElementById('emptyStateSub').textContent = searchQuery 
@@ -2378,8 +2480,6 @@
             : 'No unsaid thoughts recorded here yet.';
           document.getElementById('emptyStateCtaBtn').textContent = 'Add First Thought';
         }
-
-        if (animateTransition) triggerPageTurnAnimation(emptyStateEl);
         return;
       }
 
@@ -2435,7 +2535,7 @@
                   <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
                   <span>${badgeLabel}</span>
                 </span>
-                ${linkedCol ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-sage-100 text-forest border border-sage-300 flex items-center gap-1">📁 ${escapeHtml(linkedCol.title)}</span>` : ''}
+                ${(!selectedCollectionId && linkedCol) ? `<span onclick="event.stopPropagation(); enterBinderView('${linkedCol.id}')" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-sage-100 hover:bg-sage-200 text-forest border border-sage-300 flex items-center gap-1 transition cursor-pointer" title="Open binder">📁 ${escapeHtml(linkedCol.title)}</span>` : ''}
                 ${isSensitive ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">🔞 18+</span>` : ''}
               </div>
               <span class="font-mono text-[11px] text-fadedInk/80">${formattedDate}</span>
@@ -2509,7 +2609,6 @@
       }).join('');
 
       lucide.createIcons();
-      if (animateTransition) triggerPageTurnAnimation(gridEl);
     }
 
     function handleScrapHoverCard(cardElement) {
