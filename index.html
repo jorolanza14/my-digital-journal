@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Folio">
-  <meta name="theme-color" content="#243324">
+  <meta name="theme-color" content="#131C13">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%23243324'/%3E%3Cpath d='M60 24C42 40 34 62 42 82C46 91 54 96 60 96C66 96 74 91 78 82C86 62 78 40 60 24Z' fill='%23A7C1A5'/%3E%3Cpath d='M60 36V96' stroke='%23243324' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M60 56L47 46M60 70L73 58M60 80L48 70' stroke='%23243324' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   
@@ -71,6 +71,109 @@
       background-size: 20px 20px;
     }
 
+    /* ========================================================
+       APPLE-STYLE OPENING SPLASH & DYNAMIC ISLAND DOCKING
+       ======================================================== */
+    #splashCurtain {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: radial-gradient(circle at center, #1E2B1E 0%, #101710 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.65s;
+    }
+
+    #splashCurtain.is-fading {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #splashLogoDock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.55s ease;
+      will-change: transform, opacity;
+    }
+
+    /* Glides up toward the Dynamic Island at the top center */
+    #splashCurtain.is-docking #splashLogoDock {
+      transform: translateY(calc(-50vh + 42px)) scale(0.32);
+      opacity: 0;
+    }
+
+    .splash-ring {
+      stroke-dasharray: 283;
+      stroke-dashoffset: 283;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      animation: drawSplashRing 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes drawSplashRing {
+      0% {
+        stroke-dashoffset: 283;
+        opacity: 0.3;
+      }
+      70% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0.85;
+      }
+    }
+
+    .splash-leaf {
+      opacity: 0;
+      transform: scale(0.75);
+      transform-origin: center;
+      animation: popSplashLeaf 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+    }
+
+    @keyframes popSplashLeaf {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .splash-wordmark {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeWordmark 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+    }
+
+    @keyframes fadeWordmark {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Dynamic Island Boot Pop */
+    .dynamic-island.is-booting {
+      transform: scale(0.45);
+      opacity: 0;
+    }
+
+    /* Main Content Staggered Entrance */
+    #appMainShell {
+      opacity: 0;
+      transform: translateY(14px) scale(0.99);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #appMainShell.is-revealed {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
     .washi-gingham-green {
       background-color: rgba(167, 193, 165, 0.75);
       background-image: 
@@ -106,7 +209,9 @@
                   height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
                   border-radius 0.38s cubic-bezier(0.16, 1, 0.3, 1),
                   border-color 0.25s ease,
-                  box-shadow 0.25s ease;
+                  box-shadow 0.25s ease,
+                  transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.45s ease;
       overflow: hidden;
       position: relative;
     }
@@ -244,7 +349,32 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest discreet-blur-active">
+<body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest discreet-blur-active overflow-hidden">
+
+  <!-- ========================================================
+       OPENING SPLASH CURTAIN & DYNAMIC ISLAND MORPH (z-[100])
+       ======================================================== -->
+  <div id="splashCurtain">
+    <div id="splashLogoDock">
+      <div class="relative w-28 h-28 flex items-center justify-center">
+        <!-- Animated Circular Progress Ring -->
+        <svg class="w-full h-full" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(167, 193, 165, 0.15)" stroke-width="2.5" />
+          <circle class="splash-ring" cx="50" cy="50" r="45" fill="none" stroke="#A7C1A5" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+        <!-- Center Botanical Leaf Emblem -->
+        <svg class="splash-leaf absolute w-14 h-14" viewBox="0 0 120 120">
+          <path d="M60 22C40 40 32 64 41 85C45 94 54 99 60 99C66 99 75 94 79 85C88 64 80 40 60 22Z" fill="#A7C1A5"/>
+          <path d="M60 35V99" stroke="#162016" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M60 56L46 45M60 71L74 59M60 82L47 71" stroke="#162016" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="splash-wordmark text-center mt-4">
+        <p class="font-serif text-2xl tracking-wide text-parchment">Folio.</p>
+        <p class="font-hand text-lg text-sage-300/90 -mt-0.5">Leaves & Marginalia</p>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================
        BOTANICAL THEMED TOAST DIALOGUE BOX (z-[90])
@@ -269,7 +399,7 @@
        DYNAMIC ISLAND (z-40)
        ======================================================== -->
   <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none" style="top: calc(1.25rem + env(safe-area-inset-top));">
-    <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
+    <div id="dynamicIsland" class="pointer-events-auto dynamic-island is-booting text-parchment select-none">
       
       <!-- COLLAPSED LAYER -->
       <div id="islandCollapsed" class="island-layer-collapsed absolute inset-0 px-4 md:px-5 flex items-center justify-between">
@@ -344,7 +474,7 @@
   <!-- ========================================================
        MAIN SCRAPBOOK PAGE CONTAINER
        ======================================================== -->
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32">
+  <main id="appMainShell" class="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32">
     <section class="relative mb-8 pt-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
       <div>
         <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-100/90 border border-sage-200 text-sage-700 text-xs font-medium mb-3">
@@ -896,6 +1026,32 @@
     const confirmModal = document.getElementById('confirmModal');
     const inspectModal = document.getElementById('inspectModal');
     const moveScrapModal = document.getElementById('moveScrapModal');
+
+    // OPENING SPLASH SEQUENCE (DOCKS LOGO INTO DYNAMIC ISLAND)
+    function runOpeningSplashAnimation() {
+      const curtain = document.getElementById('splashCurtain');
+      const mainShell = document.getElementById('appMainShell');
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+      // 1. After ring completes drawing (1150ms), glide logo up into Dynamic Island
+      setTimeout(() => {
+        curtain.classList.add('is-docking');
+      }, 1150);
+
+      // 2. Pop Dynamic Island & fade splash curtain into dot-grid journal (1400ms)
+      setTimeout(() => {
+        dynamicIsland.classList.remove('is-booting');
+        curtain.classList.add('is-fading');
+        mainShell.classList.add('is-revealed');
+        document.body.classList.remove('overflow-hidden');
+        if (themeMeta) themeMeta.setAttribute('content', '#F7F4EC');
+      }, 1400);
+
+      // 3. Clean up splash node from DOM after fade completes
+      setTimeout(() => {
+        if (curtain && curtain.parentNode) curtain.remove();
+      }, 2150);
+    }
 
     // TOAST SYSTEM
     function showToast(title, message, type = 'success') {
@@ -2231,7 +2387,6 @@
                 <span class="font-semibold capitalize">${entry.mood}</span>
               </span>
               
-              <!-- Persistent on mobile/tablet (opacity-75), hover-reveal on desktop (md:opacity-0 md:group-hover:opacity-100) -->
               <div class="flex items-center gap-2 opacity-75 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button type="button" onclick="openMoveScrapModal('${entry.id}', event)" class="text-fadedInk hover:text-forest p-1.5 rounded-lg hover:bg-sage-50 cursor-pointer" title="Move to a binder">
                   <i data-lucide="folder-input" class="w-4 h-4 pointer-events-none"></i>
@@ -2299,6 +2454,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      runOpeningSplashAnimation();
       initAuth();
       setupRealtimeListener();
       lucide.createIcons();
