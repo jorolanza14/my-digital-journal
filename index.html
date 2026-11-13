@@ -2,17 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Folio — Aesthetic Botanical Scrapbook Journal</title>
+
+  <!-- Apple PWA & Home Screen App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Folio">
+  <meta name="theme-color" content="#243324">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%23243324'/%3E%3Cpath d='M60 24C42 40 34 62 42 82C46 91 54 96 60 96C66 96 74 91 78 82C86 62 78 40 60 24Z' fill='%23A7C1A5'/%3E%3Cpath d='M60 36V96' stroke='%23243324' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M60 56L47 46M60 70L73 58M60 80L48 70' stroke='%23243324' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23243324'/%3E%3Cpath d='M90 36C63 60 51 93 63 123C69 136 81 144 90 144C99 144 111 136 117 123C129 93 117 60 90 36Z' fill='%23A7C1A5'/%3E%3Cpath d='M90 54V144' stroke='%23243324' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M90 84L70 69M90 105L110 87M90 120L72 105' stroke='%23243324' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS & Lucide Icons -->
+  <!-- Tailwind CSS, Lucide Icons & html2canvas for Scrap PNG Export -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <!-- Supabase JS Client v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -51,6 +60,11 @@
   </script>
 
   <style>
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+    }
+
     .bg-dot-grid {
       background-color: #F7F4EC;
       background-image: radial-gradient(#C8C1AE 1.2px, transparent 1.2px);
@@ -188,16 +202,38 @@
       box-shadow: 0 6px 16px rgba(35, 30, 25, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
-    /* Discreet Public Blur Filters */
-    .discreet-blur-active .sensitive-content {
+    /* Discreet Public Blur Filters (Supports Desktop Hover AND Mobile Tap-to-Peek) */
+    .discreet-blur-active .sensitive-wrapper:not(.is-peeked) .sensitive-content {
       filter: blur(28px) grayscale(60%);
       transform: scale(1.05);
       transition: filter 0.35s ease, transform 0.35s ease;
     }
 
-    .discreet-blur-active .sensitive-wrapper:hover .sensitive-content {
+    .discreet-blur-active .sensitive-wrapper .sensitive-content {
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+
+    @media (hover: hover) {
+      .discreet-blur-active .sensitive-wrapper:hover .sensitive-content {
+        filter: blur(0px) grayscale(0%);
+        transform: scale(1);
+      }
+      .discreet-blur-active .sensitive-wrapper:hover .discreet-overlay {
+        opacity: 0;
+      }
+    }
+
+    .discreet-blur-active .sensitive-wrapper.is-peeked .sensitive-content {
       filter: blur(0px) grayscale(0%);
       transform: scale(1);
+    }
+
+    .discreet-blur-active .sensitive-wrapper.is-peeked .discreet-overlay {
+      opacity: 0;
+    }
+
+    body:not(.discreet-blur-active) .discreet-overlay {
+      display: none;
     }
 
     #botanicalToast {
@@ -208,11 +244,10 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest pb-24 discreet-blur-active">
+<body class="bg-dot-grid text-ink font-sans min-h-screen antialiased selection:bg-sage-200 selection:text-forest discreet-blur-active">
 
   <!-- ========================================================
        BOTANICAL THEMED TOAST DIALOGUE BOX (z-[90])
-       Fixed: pointer-events-none by default so it never blocks clicks
        ======================================================== -->
   <div class="fixed top-24 left-0 right-0 z-[90] flex justify-center pointer-events-none px-4">
     <div id="botanicalToast" class="pointer-events-none transform -translate-y-12 opacity-0 flex items-center gap-3 px-5 py-3 rounded-xl paper-shadow border max-w-md w-full bg-parchment text-ink select-none relative overflow-hidden transition-all duration-300">
@@ -233,7 +268,7 @@
   <!-- ========================================================
        DYNAMIC ISLAND (z-40)
        ======================================================== -->
-  <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
+  <header class="fixed top-5 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none" style="top: calc(1.25rem + env(safe-area-inset-top));">
     <div id="dynamicIsland" class="pointer-events-auto dynamic-island text-parchment select-none">
       
       <!-- COLLAPSED LAYER -->
@@ -338,13 +373,13 @@
     </section>
 
     <!-- BINDER FOLDERS SHELF -->
-    <section class="mb-8">
+    <section class="mb-7">
       <div class="flex items-center justify-between mb-3 px-1">
         <span class="text-xs font-semibold uppercase tracking-wider text-fadedInk flex items-center gap-1.5">
           <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700"></i>
           <span>Story Binders & Series</span>
         </span>
-        <button id="clearFolderFilterBtn" onclick="selectCollection(null)" class="hidden text-xs text-sage-700 hover:text-forest underline font-medium">
+        <button id="clearFolderFilterBtn" onclick="selectCollection(null)" class="hidden text-xs text-sage-700 hover:text-forest underline font-medium cursor-pointer">
           Show All Scraps (Exit Binder)
         </button>
       </div>
@@ -352,36 +387,69 @@
       <div id="foldersShelf" class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2"></div>
     </section>
 
-    <!-- Filters -->
-    <section class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-8">
-      <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer">
-        All Readings
-      </button>
-      <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
-        📖 Physical Books
-      </button>
-      <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
-        📑 Manga & Manhwa
-      </button>
-      <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer">
-        🎬 Anime
-      </button>
+    <!-- FILTERS, SEARCH & SORT BAR -->
+    <section class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 mb-6">
+      <!-- Media Filters -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0">
+          All Readings
+        </button>
+        <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+          📖 Books
+        </button>
+        <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+          📑 Manga
+        </button>
+        <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+          🎬 Anime
+        </button>
+      </div>
+
+      <!-- Instant Search & Reading Order Sort -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1 md:w-52">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-fadedInk absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="handleSearchInput(this.value)" 
+            placeholder="Search scraps..." 
+            class="w-full pl-8 pr-7 py-1.5 text-xs bg-white/80 border border-kraftDark/60 rounded-full focus:outline-none focus:ring-1 focus:ring-sage-500 placeholder:text-fadedInk/70 text-ink"
+          >
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-fadedInk hover:text-ink cursor-pointer">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </button>
+        </div>
+
+        <button id="sortOrderBtn" onclick="toggleSortOrder()" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white/80 hover:bg-white text-forest border border-kraftDark/60 flex items-center gap-1.5 transition cursor-pointer flex-shrink-0 shadow-sm" title="Switch between Newest First and Chronological Reading Order">
+          <i id="sortOrderIcon" data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5 text-sage-700"></i>
+          <span id="sortOrderLabel">Newest</span>
+        </button>
+      </div>
     </section>
 
-    <!-- Active Binder Banner -->
-    <div id="activeFolderBanner" class="hidden mb-6 p-4 rounded-2xl bg-sage-100/70 border border-sage-200/80 items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-forest text-parchment flex items-center justify-center font-serif text-lg">
+    <!-- Active Binder Banner (With Rename & Delete Binder Controls) -->
+    <div id="activeFolderBanner" class="hidden mb-6 p-4 rounded-2xl bg-sage-100/80 border border-sage-200 items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-forest text-parchment flex items-center justify-center font-serif text-lg flex-shrink-0">
           📁
         </div>
-        <div>
-          <h3 id="activeFolderTitle" class="font-serif text-lg text-forest font-semibold leading-tight"></h3>
-          <p id="activeFolderMeta" class="text-xs text-fadedInk"></p>
+        <div class="min-w-0">
+          <h3 id="activeFolderTitle" class="font-serif text-lg text-forest font-semibold leading-tight truncate"></h3>
+          <p id="activeFolderMeta" class="text-xs text-fadedInk truncate"></p>
         </div>
       </div>
-      <button onclick="selectCollection(null)" class="text-xs font-medium text-sage-700 hover:text-forest underline p-1 cursor-pointer">
-        Exit Folder
-      </button>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button onclick="openEditFolderModal()" class="p-2 rounded-lg bg-white/70 hover:bg-white text-sage-700 hover:text-forest border border-kraftDark/50 transition cursor-pointer" title="Edit Binder">
+          <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="promptDeleteFolder()" class="p-2 rounded-lg bg-white/70 hover:bg-rose-50 text-fadedInk hover:text-rose-700 border border-kraftDark/50 transition cursor-pointer" title="Delete Binder">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="selectCollection(null)" class="text-xs font-medium text-sage-700 hover:text-forest underline px-2 py-1 cursor-pointer">
+          Exit
+        </button>
+      </div>
     </div>
 
     <!-- SCRAPBOOK CARDS GRID -->
@@ -393,7 +461,7 @@
         <i data-lucide="book-open" class="w-8 h-8"></i>
       </div>
       <h3 class="text-xl font-serif text-forest">A clean, blank page</h3>
-      <p class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded here yet.</p>
+      <p id="emptyStateSub" class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded here yet.</p>
       <button onclick="checkAuthAndOpenModal()" class="mt-4 px-4 py-2 bg-sage-700 text-parchment rounded-lg text-xs font-medium cursor-pointer">Add First Thought</button>
     </div>
   </main>
@@ -404,7 +472,6 @@
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
       
-      <!-- Washi tape at top of inspect card (pointer-events-none added) -->
       <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-36 h-7 washi-gingham-green rounded-sm z-20 rotate-1 pointer-events-none"></div>
 
       <!-- Inspection Header -->
@@ -412,7 +479,6 @@
         <div class="flex items-center gap-2 flex-wrap">
           <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
           
-          <!-- Binder Folder Move Button (High-Priority Click Target) -->
           <button 
             type="button"
             id="inspectFolderMoveBtn" 
@@ -434,8 +500,12 @@
 
           <span id="inspectDate" class="text-xs font-mono text-fadedInk"></span>
         </div>
-        <div class="flex items-center gap-2 relative z-30">
-          <button id="inspectCopyBtn" onclick="copyInspectQuote()" class="p-2 rounded-full bg-white/70 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40 cursor-pointer" title="Copy excerpt">
+        <div class="flex items-center gap-1.5 relative z-30">
+          <!-- Save Scrap as PNG Card Button -->
+          <button id="inspectExportBtn" onclick="exportScrapAsImage()" class="p-2 rounded-full bg-white/80 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40 cursor-pointer" title="Save as Scrap PNG Image">
+            <i data-lucide="download" class="w-4 h-4 pointer-events-none"></i>
+          </button>
+          <button id="inspectCopyBtn" onclick="copyInspectQuote()" class="p-2 rounded-full bg-white/80 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40 cursor-pointer" title="Copy excerpt">
             <i data-lucide="copy" class="w-4 h-4 pointer-events-none"></i>
           </button>
           <button onclick="closeInspectModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition cursor-pointer">
@@ -453,7 +523,7 @@
 
         <div id="inspectImageBox" class="hidden">
           <div class="p-3 bg-white rounded-2xl polaroid-shadow border border-kraftDark/40 inline-block w-full text-center">
-            <img id="inspectImage" src="" alt="Panel fragment" class="rounded-xl mx-auto max-h-[60vh] object-contain w-full" loading="lazy">
+            <img id="inspectImage" src="" crossorigin="anonymous" alt="Panel fragment" class="rounded-xl mx-auto max-h-[60vh] object-contain w-full" loading="lazy">
             <p class="font-hand text-right text-xs text-fadedInk pt-2 pr-1">recorded fragment • full perspective</p>
           </div>
         </div>
@@ -519,13 +589,12 @@
         </button>
       </div>
 
-      <!-- Binder list -->
       <div id="moveScrapList" class="space-y-1.5 max-h-56 overflow-y-auto no-scrollbar py-1"></div>
 
       <div class="mt-4 pt-3 border-t border-kraftDark/40 flex items-center justify-between">
         <button onclick="openFolderModal(); closeMoveScrapModal();" class="text-xs text-sage-700 hover:text-forest font-medium flex items-center gap-1 cursor-pointer">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-          <span>+ Create New Binder</span>
+          <span>Create New Binder</span>
         </button>
         <button onclick="closeMoveScrapModal()" class="text-xs text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
       </div>
@@ -533,7 +602,7 @@
   </div>
 
   <!-- ========================================================
-       MODAL: CREATE NEW STORY BINDER (TIER 2 SUB-MODAL z-[75])
+       MODAL: CREATE OR EDIT STORY BINDER (TIER 2 SUB-MODAL z-[75])
        ======================================================== -->
   <div id="folderModal" class="apple-modal-backdrop fixed inset-0 z-[75] bg-forest/60 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-sm bg-parchment rounded-2xl paper-shadow border border-kraftDark/60 p-6 shadow-2xl">
@@ -543,10 +612,10 @@
         <i data-lucide="folder-plus" class="w-6 h-6"></i>
       </div>
       
-      <h3 class="text-xl font-serif text-forest text-center mb-1">New Story Binder</h3>
-      <p class="text-xs text-fadedInk text-center mb-5">Group all scraps from a manga, manhwa, or book together.</p>
+      <h3 id="folderModalHeader" class="text-xl font-serif text-forest text-center mb-1">New Story Binder</h3>
+      <p id="folderModalSub" class="text-xs text-fadedInk text-center mb-5">Group all scraps from a manga, manhwa, or book together.</p>
       
-      <form onsubmit="handleCreateCollection(event)" class="space-y-3.5">
+      <form onsubmit="handleSaveCollection(event)" class="space-y-3.5">
         <div>
           <label class="block text-[11px] font-medium text-fadedInk mb-1">Title / Series</label>
           <input type="text" id="inputFolderTitle" required placeholder="e.g., Unsleep or Norwegian Wood" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
@@ -623,8 +692,8 @@
       <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-red-100/70 flex items-center justify-center text-red-700">
         <i data-lucide="trash-2" class="w-5 h-5"></i>
       </div>
-      <h3 class="text-base font-serif text-forest mb-1">Tear Out Page?</h3>
-      <p class="text-xs text-fadedInk mb-4">This unsaid thought will be permanently discarded from your journal.</p>
+      <h3 id="confirmModalTitle" class="text-base font-serif text-forest mb-1">Tear Out Page?</h3>
+      <p id="confirmModalSub" class="text-xs text-fadedInk mb-4">This unsaid thought will be permanently discarded from your journal.</p>
       <div class="grid grid-cols-2 gap-2">
         <button type="button" onclick="closeConfirmModal()" class="px-3 py-2 text-xs font-medium rounded-lg bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink transition cursor-pointer">Cancel</button>
         <button type="button" id="confirmDeleteBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-700 hover:bg-red-800 text-white transition active:scale-95 cursor-pointer">Tear Page</button>
@@ -725,7 +794,7 @@
           <textarea id="inputThought" rows="3" required placeholder="Write freely—raw thoughts, what you couldn't say out loud..." class="w-full px-3.5 py-2 text-sm font-sans bg-white/70 border border-kraftDark/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"></textarea>
         </div>
 
-        <!-- IMAGE UPLOADER -->
+        <!-- IMAGE UPLOADER WITH AUTO COMPRESSION -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="block text-xs font-medium text-fadedInk">Panel Screenshot / Photo</label>
@@ -748,7 +817,7 @@
               </button>
             </div>
           </div>
-          <p id="orientationHint" class="text-[10px] text-fadedInk mt-1">Accepts manhwa vertical strips, manga panels, or anime shots.</p>
+          <p id="orientationHint" class="text-[10px] text-fadedInk mt-1">Auto-compresses screenshots to save cloud storage.</p>
         </div>
 
         <!-- 18+ PRIVACY CHECKBOX -->
@@ -759,7 +828,7 @@
               <p class="text-xs font-semibold text-forest flex items-center gap-1.5">
                 <span>🔞 Mark as 18+ / Discreet</span>
               </p>
-              <p class="text-[11px] text-fadedInk">Blur this entry by default in public. Hover or tap to unblur.</p>
+              <p class="text-[11px] text-fadedInk">Blur this entry by default in public. Tap once to peek on mobile.</p>
             </div>
           </label>
         </div>
@@ -772,6 +841,9 @@
     </div>
   </div>
 
+  <!-- Hidden Offscreen Canvas for Scrap Card PNG Export -->
+  <div id="exportStage" class="fixed -left-[9999px] top-0 pointer-events-none"></div>
+
   <!-- ========================================================
        SUPABASE CLIENT LOGIC & REALTIME SYNC
        ======================================================== -->
@@ -783,12 +855,17 @@
 
     let currentUser = null;
     let authMode = 'signin';
+    let confirmActionType = 'scrap'; // 'scrap' or 'folder'
     let pendingDeleteId = null;
+    let editingCollectionId = null;
     let inspectingEntry = null;
     let movingEntryId = null;
     let selectedFile = null;
+    let compressedBlob = null;
     let detectedOrientation = 'auto';
     let isPublicMode = true;
+    let sortAscending = false; // false = Newest First, true = Chronological Reading Order
+    let searchQuery = '';
     
     let entries = [];
     let collections = [];
@@ -820,7 +897,7 @@
     const inspectModal = document.getElementById('inspectModal');
     const moveScrapModal = document.getElementById('moveScrapModal');
 
-    // TOAST SYSTEM (Fixed: pointer-events are only enabled while toast is active)
+    // TOAST SYSTEM
     function showToast(title, message, type = 'success') {
       const toast = document.getElementById('botanicalToast');
       const toastTitle = document.getElementById('toastTitle');
@@ -897,6 +974,13 @@
 
     function handleScrapLeave() {
       activeHoverScrap = null;
+      if (selectedCollectionId) {
+        const col = collections.find(c => c.id === selectedCollectionId);
+        if (col) {
+          setIslandDisplay("BINDER", col.title, "Filtered", true);
+          return;
+        }
+      }
       setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
     }
 
@@ -919,12 +1003,15 @@
       const shieldIcon = document.getElementById('shieldIcon');
       const label = document.getElementById('publicShieldLabel');
 
+      // Reset any temporarily peeked cards when toggling
+      document.querySelectorAll('.sensitive-wrapper.is-peeked').forEach(el => el.classList.remove('is-peeked'));
+
       if (isPublicMode) {
         body.classList.add('discreet-blur-active');
         shieldIcon.setAttribute('data-lucide', 'eye-off');
         shieldIcon.className = 'w-4 h-4 text-emerald-400';
         label.innerHTML = `<i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Public Mode: <b>Active</b></span>`;
-        showToast("Public Mode Active", "18+ and sensitive manga panels are blurred for privacy.", "success");
+        showToast("Public Mode Active", "18+ panels blurred. Tap once to peek on mobile.", "success");
       } else {
         body.classList.remove('discreet-blur-active');
         shieldIcon.setAttribute('data-lucide', 'eye');
@@ -934,6 +1021,28 @@
       }
 
       lucide.createIcons();
+    }
+
+    // MOBILE TAP-TO-PEEK HANDLER FOR 18+ POLAROIDS
+    function handlePolaroidTap(wrapperEl, entryId, e) {
+      e.stopPropagation();
+      const entry = entries.find(item => item.id === entryId);
+      if (!entry) return;
+
+      // If Public Mode is active and this entry is sensitive and not yet peeked
+      if (isPublicMode && entry.is_sensitive && !wrapperEl.classList.contains('is-peeked')) {
+        // Unblur only this polaroid first
+        document.querySelectorAll('.sensitive-wrapper.is-peeked').forEach(el => el.classList.remove('is-peeked'));
+        wrapperEl.classList.add('is-peeked');
+
+        // Also update Dynamic Island on touch devices
+        let badge = entry.media_type === 'manga' ? 'MANGA' : (entry.media_type === 'anime' ? 'ANIME' : 'BOOK');
+        setIslandDisplay(badge, entry.title, entry.locator, true);
+        return;
+      }
+
+      // Second tap (or non-sensitive) opens the full inspect modal
+      openInspectModal(entryId);
     }
 
     function openIsland() { islandOpen = true; dynamicIsland.classList.add('is-expanded'); }
@@ -975,7 +1084,42 @@
       }
     });
 
-    // MODAL VISIBILITY
+    // SEARCH & CHRONOLOGICAL SORTING
+    function handleSearchInput(val) {
+      searchQuery = val.trim().toLowerCase();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (searchQuery.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      render();
+    }
+
+    function clearSearch() {
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      render();
+    }
+
+    function toggleSortOrder() {
+      sortAscending = !sortAscending;
+      const label = document.getElementById('sortOrderLabel');
+      const icon = document.getElementById('sortOrderIcon');
+
+      if (sortAscending) {
+        label.textContent = 'Reading Order';
+        icon.setAttribute('data-lucide', 'arrow-up-narrow-wide');
+      } else {
+        label.textContent = 'Newest';
+        icon.setAttribute('data-lucide', 'arrow-down-wide-narrow');
+      }
+      lucide.createIcons();
+      render();
+    }
+
+    // MODAL CONTROLLERS
     function openNewEntryModal() { 
       populateCollectionDropdown();
       entryModal.classList.add('is-active'); 
@@ -992,10 +1136,33 @@
         openAuthModal();
         return;
       }
+      editingCollectionId = null;
+      document.getElementById('folderModalHeader').textContent = 'New Story Binder';
+      document.getElementById('folderModalSub').textContent = 'Group all scraps from a manga, manhwa, or book together.';
+      document.getElementById('saveFolderBtn').textContent = 'Create Binder';
+      document.getElementById('inputFolderTitle').value = '';
+      document.getElementById('inputFolderCreator').value = '';
       folderModal.classList.add('is-active'); 
     }
+
+    function openEditFolderModal() {
+      if (!selectedCollectionId) return;
+      const col = collections.find(c => c.id === selectedCollectionId);
+      if (!col) return;
+
+      editingCollectionId = col.id;
+      document.getElementById('folderModalHeader').textContent = 'Edit Story Binder';
+      document.getElementById('folderModalSub').textContent = 'Update series title, author, or medium.';
+      document.getElementById('saveFolderBtn').textContent = 'Save Changes';
+      document.getElementById('inputFolderTitle').value = col.title;
+      document.getElementById('inputFolderCreator').value = col.creator || '';
+      document.getElementById('inputFolderType').value = col.media_type;
+      folderModal.classList.add('is-active');
+    }
+
     function closeFolderModal() { 
       folderModal.classList.remove('is-active'); 
+      editingCollectionId = null;
       document.getElementById('inputFolderTitle').value = '';
       document.getElementById('inputFolderCreator').value = '';
     }
@@ -1007,7 +1174,26 @@
     }
     function closeAuthModal() { authModal.classList.remove('is-active'); }
 
-    function promptDeleteEntry(id) { pendingDeleteId = id; confirmModal.classList.add('is-active'); }
+    function promptDeleteEntry(id) { 
+      confirmActionType = 'scrap';
+      pendingDeleteId = id; 
+      document.getElementById('confirmModalTitle').textContent = 'Tear Out Page?';
+      document.getElementById('confirmModalSub').textContent = 'This unsaid thought will be permanently discarded from your journal.';
+      document.getElementById('confirmDeleteBtn').textContent = 'Tear Page';
+      confirmModal.classList.add('is-active'); 
+    }
+
+    function promptDeleteFolder() {
+      if (!selectedCollectionId) return;
+      const col = collections.find(c => c.id === selectedCollectionId);
+      confirmActionType = 'folder';
+      pendingDeleteId = selectedCollectionId;
+      document.getElementById('confirmModalTitle').textContent = `Delete "${col ? col.title : 'Binder'}"?`;
+      document.getElementById('confirmModalSub').textContent = 'The folder will be removed, and any scraps inside will safely return to Standalone.';
+      document.getElementById('confirmDeleteBtn').textContent = 'Delete Binder';
+      confirmModal.classList.add('is-active');
+    }
+
     function closeConfirmModal() { pendingDeleteId = null; confirmModal.classList.remove('is-active'); }
 
     // MOVE TO BINDER FEATURE
@@ -1111,7 +1297,7 @@
       }
     }
 
-    // FOLDERS / COLLECTIONS MANAGEMENT
+    // FOLDERS / COLLECTIONS MANAGEMENT (CREATE, EDIT, DELETE)
     async function loadCollectionsFromCloud() {
       if (!currentUser) { collections = []; renderFoldersShelf(); return; }
       const { data, error } = await supabaseClient
@@ -1123,10 +1309,19 @@
         collections = data;
         renderFoldersShelf();
         populateCollectionDropdown();
+        if (selectedCollectionId) {
+          const activeCol = collections.find(c => c.id === selectedCollectionId);
+          if (activeCol) {
+            document.getElementById('activeFolderTitle').textContent = activeCol.title;
+            document.getElementById('activeFolderMeta').textContent = `${activeCol.creator ? activeCol.creator + ' • ' : ''}${activeCol.media_type.toUpperCase()}`;
+          } else {
+            selectCollection(null);
+          }
+        }
       }
     }
 
-    async function handleCreateCollection(e) {
+    async function handleSaveCollection(e) {
       e.preventDefault();
       if (!currentUser) return;
 
@@ -1136,27 +1331,46 @@
 
       const btn = document.getElementById('saveFolderBtn');
       btn.disabled = true;
-      btn.textContent = "Creating...";
+      btn.textContent = editingCollectionId ? "Saving..." : "Creating...";
 
-      const { data, error } = await supabaseClient
-        .from('collections')
-        .insert([{ user_id: currentUser.id, title, creator, media_type }])
-        .select();
+      if (editingCollectionId) {
+        const { error } = await supabaseClient
+          .from('collections')
+          .update({ title, creator, media_type })
+          .eq('id', editingCollectionId);
 
-      btn.disabled = false;
-      btn.textContent = "Create Binder";
+        btn.disabled = false;
+        btn.textContent = "Save Changes";
 
-      if (error) {
-        showToast("Error", error.message, "error");
+        if (error) {
+          showToast("Update Error", error.message, "error");
+        } else {
+          closeFolderModal();
+          await loadCollectionsFromCloud();
+          showToast("Binder Updated", `Saved changes to "${title}".`, "success");
+        }
       } else {
-        closeFolderModal();
-        await loadCollectionsFromCloud();
-        showToast("Binder Created", `Folder "${title}" is ready.`, "success");
-        if (data && data[0]) {
-          if (inspectingEntry) {
-            executeMoveScrap(data[0].id);
-          } else {
-            selectCollection(data[0].id);
+        const { data, error } = await supabaseClient
+          .from('collections')
+          .insert([{ user_id: currentUser.id, title, creator, media_type }])
+          .select();
+
+        btn.disabled = false;
+        btn.textContent = "Create Binder";
+
+        if (error) {
+          showToast("Error", error.message, "error");
+        } else {
+          closeFolderModal();
+          await loadCollectionsFromCloud();
+          showToast("Binder Created", `Folder "${title}" is ready.`, "success");
+          if (data && data[0]) {
+            if (inspectingEntry) {
+              movingEntryId = inspectingEntry.id;
+              executeMoveScrap(data[0].id);
+            } else {
+              selectCollection(data[0].id);
+            }
           }
         }
       }
@@ -1369,7 +1583,7 @@
     function closeInspectModal() {
       inspectModal.classList.remove('is-active');
       inspectingEntry = null;
-      setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
+      handleScrapLeave();
     }
 
     function copyInspectQuote() {
@@ -1414,35 +1628,150 @@
       promptDeleteEntry(id);
     }
 
-    // FILE ORIENTATION & UPLOAD
-    function handleFileSelect(e) {
+    // EXPORT SCRAP CARD AS DOWNLOADABLE PNG IMAGE
+    async function exportScrapAsImage() {
+      if (!inspectingEntry || typeof html2canvas === 'undefined') {
+        showToast("Export Unavailable", "Image renderer is still loading.", "error");
+        return;
+      }
+
+      const btn = document.getElementById('inspectExportBtn');
+      btn.disabled = true;
+      showToast("Generating Scrap", "Rendering your journal card...", "success");
+
+      const entry = inspectingEntry;
+      const stage = document.getElementById('exportStage');
+      const formattedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      let badgeLabel = '📖 Physical Book';
+      if (entry.media_type === 'manga') badgeLabel = '📑 Manga / Manhwa';
+      if (entry.media_type === 'anime') badgeLabel = '🎬 Anime Moment';
+
+      stage.innerHTML = `
+        <div id="exportCardTarget" style="width: 540px; padding: 36px; background-color: #F7F4EC; background-image: radial-gradient(#C8C1AE 1.2px, transparent 1.2px); background-size: 20px 20px; font-family: 'Plus Jakarta Sans', sans-serif;">
+          <div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #D4C4AE; box-shadow: 0 12px 28px rgba(38,52,38,0.12); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 11px; color: #6B685F;">
+              <span style="background: #F4F7F4; color: #3F593E; padding: 4px 10px; border-radius: 6px; border: 1px solid #CADAC8; font-weight: 600;">${badgeLabel}</span>
+              <span style="font-family: monospace;">${formattedDate}</span>
+            </div>
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 26px; color: #263426; margin: 0 0 4px 0; line-height: 1.2;">${escapeHtml(entry.title)}</h2>
+            <p style="font-size: 12px; color: #6B685F; margin: 0 0 18px 0;">${escapeHtml(entry.creator || '')} • <span style="font-family: 'Newsreader', serif; font-style: italic; color: #3F593E;">${escapeHtml(entry.locator)}</span></p>
+            ${entry.quote ? `
+              <div style="background: #F6F3EB; padding: 14px 16px; border-radius: 12px; border-left: 4px solid #60855E; margin-bottom: 16px;">
+                <p style="font-family: 'Newsreader', serif; font-style: italic; color: #263426; font-size: 15px; line-height: 1.5; margin: 0;">"${escapeHtml(entry.quote)}"</p>
+              </div>
+            ` : ''}
+            <div style="background: rgba(227, 215, 197, 0.25); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(212, 196, 174, 0.4);">
+              <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #3F593E; margin: 0 0 6px 0;">Unsaid Reflection</p>
+              <p style="font-size: 14px; color: #2B2B28; line-height: 1.6; margin: 0;">${escapeHtml(entry.thought)}</p>
+            </div>
+            <div style="margin-top: 18px; padding-top: 12px; border-top: 1px solid rgba(212, 196, 174, 0.4); display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-family: 'Caveat', cursive; font-size: 18px; color: #3F593E;">Tone: <b>${escapeHtml(entry.mood)}</b></span>
+              <span style="font-family: 'Caveat', cursive; font-size: 16px; color: #6B685F;">Folio • Leaves & Marginalia</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      try {
+        const target = document.getElementById('exportCardTarget');
+        const canvas = await html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#F7F4EC' });
+        const link = document.createElement('a');
+        const safeName = entry.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        link.download = `folio-${safeName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast("Scrap Exported", "Saved PNG image to your device.", "success");
+      } catch (err) {
+        showToast("Export Failed", "Could not render image.", "error");
+      } finally {
+        stage.innerHTML = '';
+        btn.disabled = false;
+      }
+    }
+
+    // CLIENT-SIDE CANVAS IMAGE COMPRESSION & ORIENTATION DETECTION
+    function compressImageFile(file, maxDimension = 1600, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            let width = img.naturalWidth;
+            let height = img.naturalHeight;
+
+            // Detect orientation before resizing
+            const isVertical = height > width * 1.1;
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) return reject(new Error("Compression failed"));
+                resolve({
+                  blob,
+                  dataUrl: canvas.toDataURL('image/jpeg', quality),
+                  isVertical
+                });
+              },
+              'image/jpeg',
+              quality
+            );
+          };
+          img.onerror = reject;
+          img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       selectedFile = file;
-      document.getElementById('uploadLabelText').textContent = file.name;
+      document.getElementById('uploadLabelText').textContent = "Optimizing image...";
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
+      try {
+        const result = await compressImageFile(file);
+        compressedBlob = result.blob;
+
         const previewImg = document.getElementById('imagePreview');
-        previewImg.src = event.target.result;
+        previewImg.src = result.dataUrl;
         document.getElementById('imagePreviewBox').classList.remove('hidden');
 
-        const img = new Image();
-        img.onload = function() {
-          if (img.naturalHeight > img.naturalWidth * 1.1) {
-            setOrientation('vertical');
-            document.getElementById('orientationHint').textContent = "Auto-detected: Vertical (Manhwa strip / Portrait)";
-          } else {
-            setOrientation('horizontal');
-            document.getElementById('orientationHint').textContent = "Auto-detected: Horizontal (Widescreen / Landscape)";
-          }
-          document.getElementById('orientationToggle').classList.remove('hidden');
-          document.getElementById('orientationToggle').classList.add('flex');
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
+        const sizeKB = Math.round(result.blob.size / 1024);
+        document.getElementById('uploadLabelText').textContent = `${file.name} (${sizeKB} KB)`;
+
+        if (result.isVertical) {
+          setOrientation('vertical');
+          document.getElementById('orientationHint').textContent = `Auto-detected: Vertical • Compressed to ${sizeKB} KB`;
+        } else {
+          setOrientation('horizontal');
+          document.getElementById('orientationHint').textContent = `Auto-detected: Horizontal • Compressed to ${sizeKB} KB`;
+        }
+
+        document.getElementById('orientationToggle').classList.remove('hidden');
+        document.getElementById('orientationToggle').classList.add('flex');
+      } catch (err) {
+        console.warn("Compression fallback:", err);
+        document.getElementById('uploadLabelText').textContent = file.name;
+      }
     }
 
     function setOrientation(orient) {
@@ -1450,32 +1779,38 @@
       const btnV = document.getElementById('btnOrientVert');
       const btnH = document.getElementById('btnOrientHoriz');
       if (orient === 'vertical') {
-        btnV.className = "px-2 py-0.5 text-[10px] font-semibold rounded-md bg-forest text-parchment shadow-sm transition";
-        btnH.className = "px-2 py-0.5 text-[10px] font-medium rounded-md text-fadedInk hover:text-ink transition";
+        btnV.className = "px-2 py-0.5 text-[10px] font-semibold rounded-md bg-forest text-parchment shadow-sm transition cursor-pointer";
+        btnH.className = "px-2 py-0.5 text-[10px] font-medium rounded-md text-fadedInk hover:text-ink transition cursor-pointer";
       } else {
-        btnH.className = "px-2 py-0.5 text-[10px] font-semibold rounded-md bg-forest text-parchment shadow-sm transition";
-        btnV.className = "px-2 py-0.5 text-[10px] font-medium rounded-md text-fadedInk hover:text-ink transition";
+        btnH.className = "px-2 py-0.5 text-[10px] font-semibold rounded-md bg-forest text-parchment shadow-sm transition cursor-pointer";
+        btnV.className = "px-2 py-0.5 text-[10px] font-medium rounded-md text-fadedInk hover:text-ink transition cursor-pointer";
       }
     }
 
     function clearSelectedFile() {
       selectedFile = null;
+      compressedBlob = null;
       detectedOrientation = 'auto';
       document.getElementById('inputFileUpload').value = '';
       document.getElementById('uploadLabelText').textContent = 'Choose Image from Device';
       document.getElementById('imagePreviewBox').classList.add('hidden');
       document.getElementById('orientationToggle').classList.add('hidden');
       document.getElementById('orientationToggle').classList.remove('flex');
-      document.getElementById('orientationHint').textContent = 'Accepts manhwa vertical strips, manga panels, or anime shots.';
+      document.getElementById('orientationHint').textContent = 'Auto-compresses screenshots to save cloud storage.';
     }
 
-    async function uploadImageFile(file) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+    async function uploadImageFile() {
+      const payload = compressedBlob || selectedFile;
+      const ext = compressedBlob ? 'jpg' : selectedFile.name.split('.').pop();
+      const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
 
-      const { data, error } = await supabaseClient.storage
+      const { error } = await supabaseClient.storage
         .from('journal-images')
-        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+        .upload(fileName, payload, { 
+          contentType: compressedBlob ? 'image/jpeg' : selectedFile.type,
+          cacheControl: '3600', 
+          upsert: true 
+        });
 
       if (error) throw error;
 
@@ -1557,10 +1892,7 @@
       btn.textContent = authMode === 'signup' ? "Creating..." : "Signing in...";
 
       if (authMode === 'signup') {
-        const { data, error } = await supabaseClient.auth.signUp({
-          email: email,
-          password: password
-        });
+        const { error } = await supabaseClient.auth.signUp({ email, password });
         btn.disabled = false;
         btn.textContent = "Create Account";
 
@@ -1571,10 +1903,7 @@
           showToast("Account Created", "Welcome to your journal! You are now signed in.", "success");
         }
       } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         btn.disabled = false;
         btn.textContent = "Sign In";
 
@@ -1646,7 +1975,7 @@
 
       if (selectedFile) {
         try {
-          uploadedImageUrl = await uploadImageFile(selectedFile);
+          uploadedImageUrl = await uploadImageFile();
         } catch (uploadErr) {
           console.warn("Storage upload fallback:", uploadErr);
           uploadedImageUrl = document.getElementById('imagePreview').src;
@@ -1685,10 +2014,9 @@
         tape_angle: tapeAngles[Math.floor(Math.random() * tapeAngles.length)]
       };
 
-      const { data, error } = await supabaseClient
+      const { error } = await supabaseClient
         .from('entries')
-        .insert([newRecord])
-        .select();
+        .insert([newRecord]);
 
       saveBtn.disabled = false;
       saveBtn.textContent = "Tape to Journal";
@@ -1706,14 +2034,27 @@
     document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
       if (!pendingDeleteId) return;
       const id = pendingDeleteId;
+      const type = confirmActionType;
       closeConfirmModal();
 
-      const { error } = await supabaseClient.from('entries').delete().eq('id', id);
-      if (error) {
-        showToast("Delete Error", error.message, "error");
+      if (type === 'folder') {
+        const { error } = await supabaseClient.from('collections').delete().eq('id', id);
+        if (error) {
+          showToast("Delete Error", error.message, "error");
+        } else {
+          selectCollection(null);
+          await loadCollectionsFromCloud();
+          await loadEntriesFromCloud();
+          showToast("Binder Deleted", "Scraps inside were kept as standalone.", "success");
+        }
       } else {
-        showToast("Scrap Torn", "The page has been discarded.", "success");
-        loadEntriesFromCloud();
+        const { error } = await supabaseClient.from('entries').delete().eq('id', id);
+        if (error) {
+          showToast("Delete Error", error.message, "error");
+        } else {
+          showToast("Scrap Torn", "The page has been discarded.", "success");
+          loadEntriesFromCloud();
+        }
       }
     });
 
@@ -1722,9 +2063,9 @@
       currentFilter = type;
       document.querySelectorAll('.filter-pill').forEach(btn => {
         if (btn.getAttribute('data-filter') === type) {
-          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer";
+          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0";
         } else {
-          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer";
+          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0";
         }
       });
       render();
@@ -1742,23 +2083,21 @@
           title: latest.title,
           progress: latest.locator
         };
-        document.getElementById('islandStats').textContent = `${entries.length} unsaid thoughts pinned`;
       } else {
         defaultScrapState = {
           badge: currentUser ? "EMPTY" : "GUEST",
           title: currentUser ? "No thoughts pinned" : "Sign in to sync",
           progress: "—"
         };
-        document.getElementById('islandStats').textContent = "0 unsaid thoughts";
       }
 
-      if (!activeHoverScrap) {
+      if (!activeHoverScrap && !selectedCollectionId) {
         setIslandDisplay(defaultScrapState.badge, defaultScrapState.title, defaultScrapState.progress, false);
       }
     }
 
     function render() {
-      let filtered = entries;
+      let filtered = [...entries];
 
       if (selectedCollectionId) {
         filtered = filtered.filter(e => e.collection_id === selectedCollectionId);
@@ -1768,9 +2107,26 @@
         filtered = filtered.filter(e => e.media_type === currentFilter);
       }
 
+      if (searchQuery) {
+        filtered = filtered.filter(e => 
+          (e.title && e.title.toLowerCase().includes(searchQuery)) ||
+          (e.creator && e.creator.toLowerCase().includes(searchQuery)) ||
+          (e.quote && e.quote.toLowerCase().includes(searchQuery)) ||
+          (e.thought && e.thought.toLowerCase().includes(searchQuery)) ||
+          (e.locator && e.locator.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      if (sortAscending) {
+        filtered.reverse();
+      }
+
       if (filtered.length === 0) {
         gridEl.innerHTML = '';
         emptyStateEl.classList.remove('hidden');
+        document.getElementById('emptyStateSub').textContent = searchQuery 
+          ? `No scraps matching "${searchQuery}".` 
+          : 'No unsaid thoughts recorded here yet.';
         return;
       }
 
@@ -1838,7 +2194,7 @@
             </div>
 
             ${entry.image_url ? `
-              <div class="relative mb-4 p-2.5 bg-white rounded-lg polaroid-shadow border border-kraftDark/40 transform -rotate-0.5 overflow-hidden ${isSensitive ? 'sensitive-wrapper' : ''}">
+              <div onclick="handlePolaroidTap(this, '${entry.id}', event)" class="relative mb-4 p-2.5 bg-white rounded-lg polaroid-shadow border border-kraftDark/40 transform -rotate-0.5 overflow-hidden ${isSensitive ? 'sensitive-wrapper' : ''}">
                 <div class="relative overflow-hidden rounded ${isSensitive ? 'sensitive-content' : ''}">
                   <img src="${escapeHtml(entry.image_url)}" alt="Panel" class="w-full ${imgAspectClass} rounded" loading="lazy" />
                 </div>
@@ -1849,7 +2205,7 @@
                       <i data-lucide="lock" class="w-3.5 h-3.5 text-sage-300"></i>
                       <span class="text-xs font-medium">Discreet 18+ Panel</span>
                     </div>
-                    <span class="text-[10px] text-fadedInk mt-1.5 font-hand bg-parchment/80 px-2 py-0.5 rounded">hover or tap to peek</span>
+                    <span class="text-[10px] text-fadedInk mt-1.5 font-hand bg-parchment/80 px-2 py-0.5 rounded">tap once to peek • hover on desktop</span>
                   </div>
                 ` : ''}
 
@@ -1881,16 +2237,17 @@
                 <span class="font-semibold capitalize">${entry.mood}</span>
               </span>
               
-              <div class="flex items-center gap-2">
-                <button type="button" onclick="openMoveScrapModal('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-forest transition-opacity p-1 cursor-pointer" title="Move to a binder">
+              <!-- Persistent on mobile/tablet (opacity-75), hover-reveal on desktop (md:opacity-0 md:group-hover:opacity-100) -->
+              <div class="flex items-center gap-2 opacity-75 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <button type="button" onclick="openMoveScrapModal('${entry.id}', event)" class="text-fadedInk hover:text-forest p-1.5 rounded-lg hover:bg-sage-50 cursor-pointer" title="Move to a binder">
                   <i data-lucide="folder-input" class="w-4 h-4 pointer-events-none"></i>
                 </button>
 
-                <button type="button" onclick="toggleCardSensitive('${entry.id}', event)" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
+                <button type="button" onclick="toggleCardSensitive('${entry.id}', event)" class="text-fadedInk hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
                   <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 pointer-events-none ${isSensitive ? 'text-rose-700' : ''}"></i>
                 </button>
 
-                <button type="button" onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="opacity-0 group-hover:opacity-100 text-fadedInk hover:text-rose-700 transition-opacity p-1 cursor-pointer" title="Tear out page">
+                <button type="button" onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="text-fadedInk hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer" title="Tear out page">
                   <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
                 </button>
               </div>
