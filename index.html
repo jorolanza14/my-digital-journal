@@ -102,7 +102,6 @@
       transition-duration: 0.12s;
     }
 
-    /* Ripped Newspaper / Torn Paper Cutout */
     .scrap-ripped-paper {
       background-color: #FBF9F4;
       background-image: linear-gradient(180deg, rgba(227,215,197,0.18) 0%, rgba(255,255,255,0.6) 100%);
@@ -114,7 +113,6 @@
       filter: drop-shadow(0 2px 4px rgba(45, 41, 35, 0.09));
     }
 
-    /* Kraft Index Card Tab with Mini Washi Tape */
     .scrap-kraft-tab {
       background-color: #EFE6D5;
       background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(212, 196, 174, 0.22) 8px, rgba(212, 196, 174, 0.22) 16px);
@@ -122,14 +120,12 @@
       box-shadow: 1px 3px 8px rgba(45, 41, 35, 0.08);
     }
 
-    /* Botanical Sage Stamp Ticket */
     .scrap-sage-stamp {
       background-color: #E8F0E7;
       border: 1.5px dashed #8AA889;
       box-shadow: 1px 2px 6px rgba(38, 52, 38, 0.06);
     }
 
-    /* Washi Tape Strip Button */
     .scrap-washi-btn {
       background-color: rgba(167, 193, 165, 0.42);
       background-image:
@@ -138,6 +134,36 @@
       background-size: 8px 8px;
       border: 1px solid rgba(138, 168, 137, 0.55);
       box-shadow: 0 2px 6px rgba(38, 52, 38, 0.08);
+    }
+
+    /* ========================================================
+       APPLE-STYLE INSPECT READ <-> EDIT MORPH TRANSITION
+       ======================================================== */
+    @keyframes inspectCardSpring {
+      0% { transform: scale(1); }
+      35% { transform: scale(0.984); }
+      100% { transform: scale(1); }
+    }
+
+    .inspect-card-pulse {
+      animation: inspectCardSpring 0.44s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes inspectContentReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+        filter: blur(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+      }
+    }
+
+    .inspect-view-enter {
+      animation: inspectContentReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     /* ========================================================
@@ -778,14 +804,14 @@
   </main>
 
   <!-- ========================================================
-       MODAL: INSPECT ENTRY (SPACIOUS SCRAPBOOK TWO-TIER HEADER)
+       MODAL: INSPECT ENTRY (WITH FLUID SPRING EDIT ANIMATION)
        ======================================================== -->
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
+    <div id="inspectModalCard" class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
       
       <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-36 h-7 washi-gingham-green rounded-sm z-20 rotate-1 pointer-events-none"></div>
 
-      <!-- TWO-TIER EDITORIAL HEADER: Zero Crowding + Tactile Scrap Buttons -->
+      <!-- TWO-TIER EDITORIAL HEADER -->
       <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 bg-parchment relative z-10 space-y-3.5 flex-shrink-0">
         
         <!-- Row 1: Date Stamp & Paper-Scrap Action Controls -->
@@ -793,14 +819,14 @@
           <span id="inspectDate" class="text-[11px] font-mono text-fadedInk bg-white/75 px-2.5 py-1 rounded-md border border-kraftDark/40 tracking-wide"></span>
 
           <div class="flex items-center gap-2 sm:gap-2.5 relative z-30">
-            <!-- Washi-Tape Styled Edit Scrap Button (Single line, zero wrapping) -->
+            <!-- Washi-Tape Styled Edit Scrap Button -->
             <button 
               type="button"
               id="inspectEditToggleBtn" 
               onclick="toggleInspectFullEdit()" 
               class="tactile-spring scrap-washi-btn px-3.5 py-1.5 rounded-lg text-forest text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-1" 
               title="Edit this entire scrap">
-              <i data-lucide="pencil" class="w-3.5 h-3.5 text-forest pointer-events-none"></i>
+              <i id="inspectEditToggleIcon" data-lucide="pencil" class="w-3.5 h-3.5 text-forest pointer-events-none"></i>
               <span id="inspectEditToggleLabel" class="pointer-events-none">Edit Scrap</span>
             </button>
 
@@ -835,12 +861,10 @@
           </div>
         </div>
 
-        <!-- Row 2: Tactile Scrap Metadata Cutouts (Library Stamp, Kraft Folder Tab, Ripped Newsprint Tag) -->
+        <!-- Row 2: Tactile Scrap Metadata Cutouts -->
         <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap pt-0.5">
-          <!-- Sage Botanical Stamp -->
           <span id="inspectBadge" class="scrap-sage-stamp text-xs font-semibold px-3 py-1.5 rounded-md text-sage-900 inline-flex items-center gap-1.5 transform -rotate-1"></span>
           
-          <!-- Kraft Folder Tab with Mini Washi Accent -->
           <button 
             type="button"
             id="inspectFolderMoveBtn" 
@@ -852,7 +876,6 @@
             <span id="inspectFolderMoveName" class="pointer-events-none">Assign Binder</span>
           </button>
 
-          <!-- Ripped Newspaper Privacy Slip -->
           <button 
             type="button"
             id="inspectSensitiveToggleBtn" 
@@ -907,27 +930,32 @@
       </div>
 
       <!-- ====================================================
-           INSPECTION FULL EDIT FORM VIEW (EDIT ALL MEMORY FIELDS)
+           INSPECTION FULL EDIT FORM VIEW (ANIMATED MORPH)
            ==================================================== -->
       <form id="inspectFullEditForm" onsubmit="saveFullInspectEdit(event)" class="hidden p-6 sm:p-8 space-y-4 overflow-y-auto no-scrollbar">
+        <div class="flex items-center justify-between pb-2 border-b border-kraftDark/30">
+          <span class="text-xs font-hand text-xl text-sage-700">Editing journal scrap...</span>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-fadedInk bg-white/70 px-2 py-0.5 rounded">Draft Mode</span>
+        </div>
+
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-fadedInk mb-2">Medium Type</label>
           <div class="grid grid-cols-3 gap-2">
             <label class="cursor-pointer">
               <input type="radio" name="editMediaType" value="book" class="peer sr-only">
-              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/60 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+              <div class="tactile-spring py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/60 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest">
                 📖 Book
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="editMediaType" value="manga" class="peer sr-only">
-              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/60 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+              <div class="tactile-spring py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/60 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest">
                 📑 Manga / Manhwa
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="editMediaType" value="anime" class="peer sr-only">
-              <div class="py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/60 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest transition">
+              <div class="tactile-spring py-2 text-center text-xs font-medium rounded-lg border border-kraftDark/60 bg-white/60 peer-checked:bg-forest peer-checked:text-parchment peer-checked:border-forest">
                 🎬 Anime
               </div>
             </label>
@@ -997,9 +1025,9 @@
           </div>
         </div>
 
-        <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
-          <button type="button" onclick="toggleInspectFullEdit()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
-          <button type="submit" id="saveFullEditBtn" class="tactile-spring px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">Save Changes</button>
+        <div class="pt-3 flex items-center justify-end gap-2.5 border-t border-kraftDark/30">
+          <button type="button" onclick="toggleInspectFullEdit()" class="tactile-spring scrap-ripped-paper px-4 py-2 text-xs font-semibold text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
+          <button type="submit" id="saveFullEditBtn" class="tactile-spring px-5 py-2 text-xs font-semibold bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">Save Changes</button>
         </div>
       </form>
 
@@ -2064,8 +2092,24 @@
     }
 
     // ========================================================
-    // INSPECTION MODAL & FULL SCRAP MEMORY EDITING
+    // INSPECTION MODAL & FLUID APPLE-SPRING EDIT TRANSITION
     // ========================================================
+    function triggerInspectSpringTransition(activeViewEl) {
+      const modalCard = document.getElementById('inspectModalCard');
+      if (modalCard) {
+        modalCard.classList.remove('inspect-card-pulse');
+        void modalCard.offsetWidth;
+        modalCard.classList.add('inspect-card-pulse');
+      }
+
+      if (activeViewEl) {
+        activeViewEl.scrollTop = 0;
+        activeViewEl.classList.remove('inspect-view-enter');
+        void activeViewEl.offsetWidth;
+        activeViewEl.classList.add('inspect-view-enter');
+      }
+    }
+
     function populateInspectReadView(entry) {
       let badgeLabel = '📖 Physical Book';
       if (entry.media_type === 'manga') badgeLabel = '📑 Manga / Manhwa';
@@ -2114,8 +2158,16 @@
 
       populateInspectReadView(entry);
 
-      document.getElementById('inspectReadView').classList.remove('hidden');
-      document.getElementById('inspectFullEditForm').classList.add('hidden');
+      const readView = document.getElementById('inspectReadView');
+      const editForm = document.getElementById('inspectFullEditForm');
+      const toggleBtn = document.getElementById('inspectEditToggleBtn');
+      const toggleIcon = document.getElementById('inspectEditToggleIcon');
+
+      readView.classList.remove('hidden', 'inspect-view-enter');
+      editForm.classList.add('hidden');
+
+      toggleBtn.className = "tactile-spring scrap-washi-btn px-3.5 py-1.5 rounded-lg text-forest text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-1";
+      toggleIcon.setAttribute('data-lucide', 'pencil');
       document.getElementById('inspectEditToggleLabel').textContent = 'Edit Scrap';
 
       inspectModal.classList.add('is-active');
@@ -2146,6 +2198,8 @@
 
       const readView = document.getElementById('inspectReadView');
       const editForm = document.getElementById('inspectFullEditForm');
+      const toggleBtn = document.getElementById('inspectEditToggleBtn');
+      const toggleIcon = document.getElementById('inspectEditToggleIcon');
       const toggleLabel = document.getElementById('inspectEditToggleLabel');
 
       if (isEditingInspect) {
@@ -2176,11 +2230,23 @@
 
         readView.classList.add('hidden');
         editForm.classList.remove('hidden');
+
+        // Morph button into a Kraft Paper "Cancel Edit" tab
+        toggleBtn.className = "tactile-spring scrap-kraft-tab px-3.5 py-1.5 rounded-lg text-forest text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform rotate-1";
+        toggleIcon.setAttribute('data-lucide', 'rotate-ccw');
         toggleLabel.textContent = 'Cancel Edit';
+
+        triggerInspectSpringTransition(editForm);
       } else {
         editForm.classList.add('hidden');
         readView.classList.remove('hidden');
+
+        // Morph button back to Washi "Edit Scrap" strip
+        toggleBtn.className = "tactile-spring scrap-washi-btn px-3.5 py-1.5 rounded-lg text-forest text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-1";
+        toggleIcon.setAttribute('data-lucide', 'pencil');
         toggleLabel.textContent = 'Edit Scrap';
+
+        triggerInspectSpringTransition(readView);
       }
 
       safeCreateIcons();
@@ -2308,14 +2374,25 @@
         populateInspectReadView(inspectingEntry);
 
         isEditingInspect = false;
-        document.getElementById('inspectFullEditForm').classList.add('hidden');
-        document.getElementById('inspectReadView').classList.remove('hidden');
+        const readView = document.getElementById('inspectReadView');
+        const editForm = document.getElementById('inspectFullEditForm');
+        const toggleBtn = document.getElementById('inspectEditToggleBtn');
+        const toggleIcon = document.getElementById('inspectEditToggleIcon');
+
+        editForm.classList.add('hidden');
+        readView.classList.remove('hidden');
+
+        toggleBtn.className = "tactile-spring scrap-washi-btn px-3.5 py-1.5 rounded-lg text-forest text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-1";
+        toggleIcon.setAttribute('data-lucide', 'pencil');
         document.getElementById('inspectEditToggleLabel').textContent = 'Edit Scrap';
+
+        triggerInspectSpringTransition(readView);
 
         let badge = media_type === 'manga' ? 'MANGA' : (media_type === 'anime' ? 'ANIME' : 'BOOK');
         setIslandDisplay(badge, title, locator, true);
 
         loadEntriesFromCloud();
+        safeCreateIcons();
         showToast("Scrap Updated", `Saved changes to "${title}".`, "success");
       }
     }
