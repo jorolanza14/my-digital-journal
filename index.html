@@ -81,6 +81,66 @@
     }
 
     /* ========================================================
+       TACTILE SCRAP, WASHI TAPE & RIPPED NEWSPRINT BUTTONS
+       ======================================================== */
+    .tactile-spring {
+      transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                  background-color 0.22s ease,
+                  border-color 0.22s ease;
+      will-change: transform;
+    }
+
+    .tactile-spring:hover {
+      transform: translateY(-2px) rotate(0deg) !important;
+      box-shadow: 0 8px 18px -4px rgba(38, 52, 38, 0.14), 0 2px 6px rgba(38, 52, 38, 0.06);
+    }
+
+    .tactile-spring:active {
+      transform: scale(0.93) translateY(1px) !important;
+      box-shadow: 0 2px 5px rgba(38, 52, 38, 0.1);
+      transition-duration: 0.12s;
+    }
+
+    /* Ripped Newspaper / Torn Paper Cutout */
+    .scrap-ripped-paper {
+      background-color: #FBF9F4;
+      background-image: linear-gradient(180deg, rgba(227,215,197,0.18) 0%, rgba(255,255,255,0.6) 100%);
+      border: 1px solid #D4C4AE;
+      clip-path: polygon(
+        0% 4%, 6% 0%, 14% 3%, 22% 0%, 31% 4%, 40% 1%, 50% 4%, 61% 0%, 71% 3%, 81% 0%, 91% 4%, 100% 1%,
+        99% 96%, 93% 100%, 84% 96%, 75% 100%, 65% 97%, 55% 100%, 44% 96%, 34% 100%, 24% 97%, 14% 100%, 5% 96%, 0% 99%
+      );
+      filter: drop-shadow(0 2px 4px rgba(45, 41, 35, 0.09));
+    }
+
+    /* Kraft Index Card Tab with Mini Washi Tape */
+    .scrap-kraft-tab {
+      background-color: #EFE6D5;
+      background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(212, 196, 174, 0.22) 8px, rgba(212, 196, 174, 0.22) 16px);
+      border: 1px solid #CCB99E;
+      box-shadow: 1px 3px 8px rgba(45, 41, 35, 0.08);
+    }
+
+    /* Botanical Sage Stamp Ticket */
+    .scrap-sage-stamp {
+      background-color: #E8F0E7;
+      border: 1.5px dashed #8AA889;
+      box-shadow: 1px 2px 6px rgba(38, 52, 38, 0.06);
+    }
+
+    /* Washi Tape Strip Button */
+    .scrap-washi-btn {
+      background-color: rgba(167, 193, 165, 0.42);
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.38) 50%, transparent 50%),
+        linear-gradient(rgba(255,255,255,0.38) 50%, transparent 50%);
+      background-size: 8px 8px;
+      border: 1px solid rgba(138, 168, 137, 0.55);
+      box-shadow: 0 2px 6px rgba(38, 52, 38, 0.08);
+    }
+
+    /* ========================================================
        APPLE-STYLE OPENING SPLASH WITH CSS FAILSAFE
        ======================================================== */
     #splashCurtain {
@@ -562,13 +622,13 @@
           </p>
         </div>
 
-        <div class="flex items-center gap-2.5">
-          <button onclick="openFolderModal()" class="px-4 py-2.5 bg-parchmentDark hover:bg-kraft text-forest border border-kraftDark rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer" title="Create a new binder folder">
+        <div class="flex items-center gap-3">
+          <button onclick="openFolderModal()" class="tactile-spring scrap-kraft-tab px-4 py-2.5 text-forest rounded-xl flex items-center gap-2 text-sm font-medium cursor-pointer transform -rotate-1" title="Create a new binder folder">
             <i data-lucide="folder-plus" class="w-4 h-4 text-sage-700"></i>
             <span>New Binder</span>
           </button>
 
-          <button onclick="checkAuthAndOpenModal()" class="group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 text-sm font-medium cursor-pointer">
+          <button onclick="checkAuthAndOpenModal()" class="tactile-spring group relative px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md flex items-center gap-2 text-sm font-medium cursor-pointer transform rotate-1">
             <i data-lucide="pen-tool" class="w-4 h-4 text-sage-300 group-hover:rotate-12 transition-transform"></i>
             <span>Add New Scrap</span>
           </button>
@@ -591,16 +651,16 @@
       <!-- FILTERS, SEARCH & SORT BAR -->
       <section class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 mb-6">
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <button onclick="setFilter('all')" data-filter="all" class="filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0">
+          <button onclick="setFilter('all')" data-filter="all" class="tactile-spring filter-pill active px-4 py-1.5 rounded-full text-xs font-medium bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0">
             All Readings
           </button>
-          <button onclick="setFilter('book')" data-filter="book" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+          <button onclick="setFilter('book')" data-filter="book" class="tactile-spring filter-pill px-4 py-1.5 rounded-full text-xs font-medium bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
             📖 Books
           </button>
-          <button onclick="setFilter('manga')" data-filter="manga" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+          <button onclick="setFilter('manga')" data-filter="manga" class="tactile-spring filter-pill px-4 py-1.5 rounded-full text-xs font-medium bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
             📑 Manga
           </button>
-          <button onclick="setFilter('anime')" data-filter="anime" class="filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
+          <button onclick="setFilter('anime')" data-filter="anime" class="tactile-spring filter-pill px-4 py-1.5 rounded-full text-xs font-medium bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0">
             🎬 Anime
           </button>
         </div>
@@ -620,7 +680,7 @@
             </button>
           </div>
 
-          <button id="sortOrderBtn" onclick="toggleSortOrder()" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white/80 hover:bg-white text-forest border border-kraftDark/60 flex items-center gap-1.5 transition cursor-pointer flex-shrink-0 shadow-sm" title="Switch between Newest First and Chronological Reading Order">
+          <button id="sortOrderBtn" onclick="toggleSortOrder()" class="tactile-spring px-3 py-1.5 rounded-full text-xs font-medium bg-white/85 hover:bg-white text-forest border border-kraftDark/60 flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-sm" title="Switch between Newest First and Chronological Reading Order">
             <i id="sortOrderIcon" data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5 text-sage-700"></i>
             <span id="sortOrderLabel">Newest</span>
           </button>
@@ -631,17 +691,17 @@
     <!-- SCREEN 2: DEDICATED STORY BINDER WORKSPACE VIEW -->
     <div id="binderScreenView" class="hidden pt-2">
       <div class="flex items-center justify-between mb-6">
-        <button onclick="exitBinderView()" class="group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 hover:bg-white text-forest border border-kraftDark/70 paper-shadow text-xs font-semibold transition active:scale-95 cursor-pointer">
+        <button onclick="exitBinderView()" class="tactile-spring scrap-kraft-tab group inline-flex items-center gap-2 px-4 py-2 rounded-xl text-forest text-xs font-semibold cursor-pointer transform -rotate-1">
           <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-sage-700 group-hover:-translate-x-0.5 transition-transform"></i>
           <span>Back to All Scraps</span>
         </button>
 
-        <div class="flex items-center gap-2">
-          <button onclick="openEditFolderModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/85 hover:bg-white text-sage-700 hover:text-forest border border-kraftDark/60 text-xs font-medium transition cursor-pointer shadow-sm" title="Rename or edit this binder">
+        <div class="flex items-center gap-2.5">
+          <button onclick="openEditFolderModal()" class="tactile-spring scrap-ripped-paper inline-flex items-center gap-1.5 px-3.5 py-2 text-sage-800 hover:text-forest text-xs font-semibold cursor-pointer transform rotate-1" title="Rename or edit this binder">
             <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">Edit Binder</span>
           </button>
-          <button onclick="promptDeleteFolder()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/85 hover:bg-rose-50 text-fadedInk hover:text-rose-700 border border-kraftDark/60 text-xs font-medium transition cursor-pointer shadow-sm" title="Delete this binder">
+          <button onclick="promptDeleteFolder()" class="tactile-spring scrap-ripped-paper inline-flex items-center gap-1.5 px-3.5 py-2 text-fadedInk hover:text-rose-700 text-xs font-semibold cursor-pointer transform -rotate-1" title="Delete this binder">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">Delete</span>
           </button>
@@ -673,7 +733,7 @@
           </div>
 
           <div class="flex-shrink-0">
-            <button onclick="checkAuthAndOpenModal()" class="w-full sm:w-auto px-5 py-3 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-sm font-medium cursor-pointer">
+            <button onclick="checkAuthAndOpenModal()" class="tactile-spring w-full sm:w-auto px-5 py-3 bg-forest hover:bg-sage-900 text-parchment rounded-xl shadow-md flex items-center justify-center gap-2 text-sm font-medium cursor-pointer transform rotate-1">
               <i data-lucide="plus-circle" class="w-4 h-4 text-sage-300"></i>
               <span>Add Scrap to Binder</span>
             </button>
@@ -695,7 +755,7 @@
             </button>
           </div>
 
-          <button id="binderSortOrderBtn" onclick="toggleSortOrder()" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-parchment/80 hover:bg-parchment text-forest border border-kraftDark/50 flex items-center justify-center gap-1.5 transition cursor-pointer flex-shrink-0">
+          <button id="binderSortOrderBtn" onclick="toggleSortOrder()" class="tactile-spring px-3.5 py-2 rounded-xl text-xs font-medium bg-parchment/80 hover:bg-parchment text-forest border border-kraftDark/50 flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0">
             <i id="binderSortOrderIcon" data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5 text-sage-700"></i>
             <span id="binderSortOrderLabel">Newest First</span>
           </button>
@@ -712,63 +772,97 @@
       </div>
       <h3 id="emptyStateTitle" class="text-xl font-serif text-forest">A clean, blank page</h3>
       <p id="emptyStateSub" class="font-hand text-xl text-fadedInk mt-1">No unsaid thoughts recorded here yet.</p>
-      <button id="emptyStateCtaBtn" onclick="checkAuthAndOpenModal()" class="mt-4 px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl text-xs font-medium shadow-sm transition active:scale-95 cursor-pointer">Add First Thought</button>
+      <button id="emptyStateCtaBtn" onclick="checkAuthAndOpenModal()" class="tactile-spring mt-4 px-5 py-2.5 bg-forest hover:bg-sage-900 text-parchment rounded-xl text-xs font-medium shadow-sm cursor-pointer">Add First Thought</button>
     </div>
 
   </main>
 
   <!-- ========================================================
-       MODAL: INSPECT ENTRY (WITH FULL MEMORY & REFLECTION EDITING)
+       MODAL: INSPECT ENTRY (SPACIOUS SCRAPBOOK TWO-TIER HEADER)
        ======================================================== -->
   <div id="inspectModal" class="apple-modal-backdrop fixed inset-0 z-50 bg-forest/50 backdrop-blur-md flex items-center justify-center p-4">
     <div class="apple-modal-card relative w-full max-w-2xl bg-parchment rounded-3xl paper-shadow border border-kraftDark/60 max-h-[90vh] flex flex-col overflow-hidden">
       
       <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-36 h-7 washi-gingham-green rounded-sm z-20 rotate-1 pointer-events-none"></div>
 
-      <!-- Inspection Header -->
-      <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 flex items-center justify-between flex-shrink-0 bg-parchment relative z-10">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span id="inspectBadge" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-sage-100 text-sage-800 border border-sage-200"></span>
+      <!-- TWO-TIER EDITORIAL HEADER: Zero Crowding + Tactile Scrap Buttons -->
+      <div class="px-6 sm:px-8 pt-7 pb-4 border-b border-kraftDark/40 bg-parchment relative z-10 space-y-3.5 flex-shrink-0">
+        
+        <!-- Row 1: Date Stamp & Paper-Scrap Action Controls -->
+        <div class="flex items-center justify-between gap-3">
+          <span id="inspectDate" class="text-[11px] font-mono text-fadedInk bg-white/75 px-2.5 py-1 rounded-md border border-kraftDark/40 tracking-wide"></span>
+
+          <div class="flex items-center gap-2 sm:gap-2.5 relative z-30">
+            <!-- Washi-Tape Styled Edit Scrap Button (Single line, zero wrapping) -->
+            <button 
+              type="button"
+              id="inspectEditToggleBtn" 
+              onclick="toggleInspectFullEdit()" 
+              class="tactile-spring scrap-washi-btn px-3.5 py-1.5 rounded-lg text-forest text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-1" 
+              title="Edit this entire scrap">
+              <i data-lucide="pencil" class="w-3.5 h-3.5 text-forest pointer-events-none"></i>
+              <span id="inspectEditToggleLabel" class="pointer-events-none">Edit Scrap</span>
+            </button>
+
+            <!-- Ripped Paper Export PNG Button -->
+            <button 
+              type="button"
+              id="inspectExportBtn" 
+              onclick="exportScrapAsImage()" 
+              class="tactile-spring scrap-ripped-paper w-9 h-9 flex items-center justify-center text-fadedInk hover:text-forest cursor-pointer transform rotate-1" 
+              title="Save as Scrap PNG Image">
+              <i data-lucide="download" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+
+            <!-- Ripped Paper Copy Quote Button -->
+            <button 
+              type="button"
+              id="inspectCopyBtn" 
+              onclick="copyInspectQuote()" 
+              class="tactile-spring scrap-ripped-paper w-9 h-9 flex items-center justify-center text-fadedInk hover:text-forest cursor-pointer transform -rotate-1" 
+              title="Copy excerpt">
+              <i data-lucide="copy" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+
+            <!-- Kraft Stamp Close Button -->
+            <button 
+              type="button"
+              onclick="closeInspectModal()" 
+              class="tactile-spring scrap-kraft-tab w-9 h-9 rounded-xl flex items-center justify-center text-fadedInk hover:text-ink cursor-pointer" 
+              title="Close">
+              <i data-lucide="x" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 2: Tactile Scrap Metadata Cutouts (Library Stamp, Kraft Folder Tab, Ripped Newsprint Tag) -->
+        <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap pt-0.5">
+          <!-- Sage Botanical Stamp -->
+          <span id="inspectBadge" class="scrap-sage-stamp text-xs font-semibold px-3 py-1.5 rounded-md text-sage-900 inline-flex items-center gap-1.5 transform -rotate-1"></span>
           
+          <!-- Kraft Folder Tab with Mini Washi Accent -->
           <button 
             type="button"
             id="inspectFolderMoveBtn" 
             onclick="openMoveScrapFromInspect(event)" 
-            class="relative z-30 text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/70 bg-white/80 hover:bg-white text-forest transition flex items-center gap-1.5 cursor-pointer shadow-sm hover:border-sage-500 active:scale-95" 
+            class="tactile-spring scrap-kraft-tab relative z-30 text-xs font-semibold px-3.5 py-1.5 rounded-lg text-forest flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform rotate-1" 
             title="Move to a binder folder">
-            <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-700 pointer-events-none"></i>
+            <span class="w-2 h-2 rounded-full bg-sage-600/70 pointer-events-none"></span>
+            <i data-lucide="folder" class="w-3.5 h-3.5 text-sage-800 pointer-events-none"></i>
             <span id="inspectFolderMoveName" class="pointer-events-none">Assign Binder</span>
           </button>
 
+          <!-- Ripped Newspaper Privacy Slip -->
           <button 
             type="button"
             id="inspectSensitiveToggleBtn" 
             onclick="toggleExistingEntrySensitive()" 
-            class="relative z-30 text-xs font-medium px-2.5 py-1 rounded-md border transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-            <span id="inspectSensitiveToggleIcon" class="pointer-events-none">🔞</span>
+            class="tactile-spring scrap-ripped-paper relative z-30 text-xs font-semibold px-3.5 py-1.5 text-ink flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-0.5">
+            <span id="inspectSensitiveToggleIcon" class="pointer-events-none">🛡️</span>
             <span id="inspectSensitiveToggleText" class="pointer-events-none">Mark as 18+</span>
           </button>
-
-          <span id="inspectDate" class="text-xs font-mono text-fadedInk"></span>
         </div>
 
-        <div class="flex items-center gap-1.5 relative z-30">
-          <!-- Full Edit Toggle Button -->
-          <button id="inspectEditToggleBtn" onclick="toggleInspectFullEdit()" class="px-3 py-1.5 rounded-full bg-white/85 hover:bg-white text-forest border border-kraftDark/50 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer active:scale-95" title="Edit this entire scrap">
-            <i data-lucide="pencil" class="w-3.5 h-3.5 text-sage-700 pointer-events-none"></i>
-            <span id="inspectEditToggleLabel" class="pointer-events-none">Edit Scrap</span>
-          </button>
-
-          <button id="inspectExportBtn" onclick="exportScrapAsImage()" class="p-2 rounded-full bg-white/80 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40 cursor-pointer" title="Save as Scrap PNG Image">
-            <i data-lucide="download" class="w-4 h-4 pointer-events-none"></i>
-          </button>
-          <button id="inspectCopyBtn" onclick="copyInspectQuote()" class="p-2 rounded-full bg-white/80 hover:bg-white text-fadedInk hover:text-forest transition shadow-sm border border-kraftDark/40 cursor-pointer" title="Copy excerpt">
-            <i data-lucide="copy" class="w-4 h-4 pointer-events-none"></i>
-          </button>
-          <button onclick="closeInspectModal()" class="w-8 h-8 rounded-full bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink flex items-center justify-center transition cursor-pointer">
-            <i data-lucide="x" class="w-4 h-4 pointer-events-none"></i>
-          </button>
-        </div>
       </div>
 
       <!-- ====================================================
@@ -805,7 +899,7 @@
 
         <div class="pt-4 border-t border-kraftDark/40 flex items-center justify-between text-xs">
           <span class="font-hand text-lg text-sage-700">Tone: <span id="inspectMood" class="font-semibold capitalize"></span></span>
-          <button id="inspectDeleteBtn" onclick="deleteFromInspect()" class="text-xs text-rose-700 hover:text-rose-900 font-medium flex items-center gap-1 cursor-pointer">
+          <button id="inspectDeleteBtn" onclick="deleteFromInspect()" class="tactile-spring scrap-ripped-paper px-3 py-1.5 text-xs text-rose-700 hover:text-rose-900 font-semibold flex items-center gap-1.5 cursor-pointer">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             <span>Tear Scrap</span>
           </button>
@@ -905,7 +999,7 @@
 
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
           <button type="button" onclick="toggleInspectFullEdit()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
-          <button type="submit" id="saveFullEditBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">Save Changes</button>
+          <button type="submit" id="saveFullEditBtn" class="tactile-spring px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">Save Changes</button>
         </div>
       </form>
 
@@ -982,7 +1076,7 @@
 
         <div class="pt-2 flex items-center justify-end gap-2 border-t border-kraftDark/30">
           <button type="button" onclick="closeFolderModal()" class="px-3.5 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
-          <button type="submit" id="saveFolderBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">Create Binder</button>
+          <button type="submit" id="saveFolderBtn" class="tactile-spring px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">Create Binder</button>
         </div>
       </form>
     </div>
@@ -1012,7 +1106,7 @@
           <input type="password" id="authPasswordInput" required placeholder="••••••••" minlength="6" class="w-full px-3.5 py-2 text-sm bg-white border border-kraftDark rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500">
         </div>
         
-        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 mt-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">
+        <button type="submit" id="authSubmitBtn" class="tactile-spring w-full py-2.5 mt-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">
           Sign In
         </button>
       </form>
@@ -1041,7 +1135,7 @@
       <p id="confirmModalSub" class="text-xs text-fadedInk mb-4">This unsaid thought will be permanently discarded from your journal.</p>
       <div class="grid grid-cols-2 gap-2">
         <button type="button" onclick="closeConfirmModal()" class="px-3 py-2 text-xs font-medium rounded-lg bg-kraft/40 hover:bg-kraft text-fadedInk hover:text-ink transition cursor-pointer">Cancel</button>
-        <button type="button" id="confirmDeleteBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-700 hover:bg-red-800 text-white transition active:scale-95 cursor-pointer">Tear Page</button>
+        <button type="button" id="confirmDeleteBtn" class="tactile-spring px-3 py-2 text-xs font-medium rounded-lg bg-red-700 hover:bg-red-800 text-white cursor-pointer">Tear Page</button>
       </div>
     </div>
   </div>
@@ -1180,7 +1274,7 @@
 
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-kraftDark/30">
           <button type="button" onclick="closeNewEntryModal()" class="px-4 py-2 text-xs font-medium text-fadedInk hover:text-ink cursor-pointer">Cancel</button>
-          <button type="submit" id="saveEntryBtn" class="px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm active:scale-95 transition cursor-pointer">Tape to Journal</button>
+          <button type="submit" id="saveEntryBtn" class="tactile-spring px-5 py-2 text-xs font-medium bg-forest hover:bg-sage-900 text-parchment rounded-lg shadow-sm cursor-pointer">Tape to Journal</button>
         </div>
       </form>
     </div>
@@ -1868,8 +1962,8 @@
     function renderFoldersShelf() {
       if (collections.length === 0) {
         foldersShelfEl.innerHTML = `
-          <div onclick="openFolderModal()" class="cursor-pointer px-4 py-2.5 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-xs text-fadedInk hover:text-forest flex items-center gap-2 transition flex-shrink-0">
-            <i data-lucide="folder-plus" class="w-4 h-4 text-sage-600"></i>
+          <div onclick="openFolderModal()" class="tactile-spring scrap-kraft-tab cursor-pointer px-4 py-2.5 rounded-xl text-xs text-forest font-medium flex items-center gap-2 flex-shrink-0">
+            <i data-lucide="folder-plus" class="w-4 h-4 text-sage-700"></i>
             <span>Create your first Story Binder...</span>
           </div>
         `;
@@ -1881,18 +1975,18 @@
         const scrapCount = entries.filter(e => e.collection_id === col.id).length;
         
         return `
-          <div onclick="enterBinderView('${col.id}')" class="cursor-pointer group flex-shrink-0 px-4 py-2.5 rounded-xl border bg-white/85 hover:bg-white text-ink border-kraftDark/50 hover:border-sage-500 hover:-translate-y-0.5 transition-all duration-200 paper-shadow flex items-center gap-2.5 select-none active:scale-95">
-            <div class="w-8 h-8 rounded-lg bg-sage-100 group-hover:bg-forest group-hover:text-parchment text-forest flex items-center justify-center text-sm transition-colors">
+          <div onclick="enterBinderView('${col.id}')" class="tactile-spring scrap-kraft-tab cursor-pointer group flex-shrink-0 px-4 py-2.5 rounded-xl text-ink flex items-center gap-2.5 select-none">
+            <div class="w-8 h-8 rounded-lg bg-forest/10 group-hover:bg-forest group-hover:text-parchment text-forest flex items-center justify-center text-sm transition-colors">
               📁
             </div>
             <div>
-              <p class="text-xs font-semibold leading-tight truncate max-w-[150px] group-hover:text-forest">${escapeHtml(col.title)}</p>
+              <p class="text-xs font-semibold leading-tight truncate max-w-[150px] text-forest">${escapeHtml(col.title)}</p>
               <p class="text-[10px] text-fadedInk mt-0.5">${scrapCount} scrap${scrapCount === 1 ? '' : 's'}</p>
             </div>
           </div>
         `;
       }).join('') + `
-        <button onclick="openFolderModal()" class="flex-shrink-0 w-10 h-10 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/40 text-fadedInk hover:text-forest flex items-center justify-center transition cursor-pointer" title="Add another folder">
+        <button onclick="openFolderModal()" class="tactile-spring flex-shrink-0 w-10 h-10 rounded-xl border border-dashed border-kraftDark hover:border-sage-500 bg-white/50 text-fadedInk hover:text-forest flex items-center justify-center cursor-pointer" title="Add another folder">
           <i data-lucide="plus" class="w-4 h-4"></i>
         </button>
       `;
@@ -1957,11 +2051,13 @@
       const text = document.getElementById('inspectSensitiveToggleText');
 
       if (isSens) {
-        btn.className = "relative z-30 text-xs font-semibold px-2.5 py-1 rounded-md border border-rose-300 bg-rose-50 text-rose-800 transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95";
+        btn.className = "tactile-spring scrap-ripped-paper relative z-30 text-xs font-semibold px-3.5 py-1.5 text-rose-800 flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-0.5";
+        btn.style.backgroundColor = "#FFF1F2";
         icon.textContent = "🔞";
-        text.textContent = "18+ Discreet (Click to Unmark)";
+        text.textContent = "18+ Discreet (Unmark)";
       } else {
-        btn.className = "relative z-30 text-xs font-medium px-2.5 py-1 rounded-md border border-kraftDark/60 bg-white/70 hover:bg-white text-fadedInk hover:text-ink transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95";
+        btn.className = "tactile-spring scrap-ripped-paper relative z-30 text-xs font-semibold px-3.5 py-1.5 text-ink flex items-center gap-1.5 cursor-pointer whitespace-nowrap transform -rotate-0.5";
+        btn.style.backgroundColor = "#FBF9F4";
         icon.textContent = "🛡️";
         text.textContent = "Mark as 18+";
       }
@@ -2055,7 +2151,6 @@
       if (isEditingInspect) {
         resetEditMediaState();
 
-        // Populate form fields with current entry values
         const radio = document.querySelector(`input[name="editMediaType"][value="${inspectingEntry.media_type}"]`);
         if (radio) radio.checked = true;
 
@@ -2066,12 +2161,10 @@
         document.getElementById('editQuoteInput').value = inspectingEntry.quote || '';
         document.getElementById('editThoughtInput').value = inspectingEntry.thought || '';
 
-        // Extract existing orientation
         const tapeParts = (inspectingEntry.tape_type || 'washi-gingham-green').split('|');
         const currentOrient = tapeParts[1] || 'horizontal';
         setEditOrientation(currentOrient);
 
-        // Show existing image preview if present
         const previewBox = document.getElementById('editImagePreviewBox');
         const previewImg = document.getElementById('editImagePreview');
         if (inspectingEntry.image_url) {
@@ -2185,7 +2278,6 @@
         }
       }
 
-      // Preserve existing tape style and update orientation tag
       const baseTape = (inspectingEntry.tape_type || 'washi-gingham-green').split('|')[0];
       const updatedTapeType = `${baseTape}|${editOrientation}`;
 
@@ -2706,9 +2798,9 @@
       currentFilter = type;
       document.querySelectorAll('.filter-pill').forEach(btn => {
         if (btn.getAttribute('data-filter') === type) {
-          btn.className = "filter-pill active px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0";
+          btn.className = "tactile-spring filter-pill active px-4 py-1.5 rounded-full text-xs font-medium bg-forest text-parchment shadow-sm cursor-pointer flex-shrink-0";
         } else {
-          btn.className = "filter-pill px-4 py-1.5 rounded-full text-xs font-medium transition-all bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0";
+          btn.className = "tactile-spring filter-pill px-4 py-1.5 rounded-full text-xs font-medium bg-parchmentDark text-fadedInk hover:text-ink hover:bg-kraft/50 cursor-pointer flex-shrink-0";
         }
       });
       render();
@@ -2832,12 +2924,12 @@
             
             <div class="flex items-center justify-between pt-1 mb-3 text-xs text-fadedInk">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="inline-flex items-center gap-1.5 font-medium px-2.5 py-0.5 rounded-md bg-sage-50 text-sage-700 border border-sage-200/60">
+                <span class="scrap-sage-stamp inline-flex items-center gap-1.5 font-medium px-2.5 py-0.5 rounded-md text-sage-800">
                   <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
                   <span>${badgeLabel}</span>
                 </span>
-                ${(!selectedCollectionId && linkedCol) ? `<span onclick="event.stopPropagation(); enterBinderView('${linkedCol.id}')" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-sage-100 hover:bg-sage-200 text-forest border border-sage-300 flex items-center gap-1 transition cursor-pointer" title="Open binder">📁 ${escapeHtml(linkedCol.title)}</span>` : ''}
-                ${isSensitive ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">🔞 18+</span>` : ''}
+                ${(!selectedCollectionId && linkedCol) ? `<span onclick="event.stopPropagation(); enterBinderView('${linkedCol.id}')" class="tactile-spring scrap-kraft-tab text-[10px] font-semibold px-2.5 py-0.5 rounded-md text-forest flex items-center gap-1 cursor-pointer" title="Open binder">📁 ${escapeHtml(linkedCol.title)}</span>` : ''}
+                ${isSensitive ? `<span class="scrap-ripped-paper text-[10px] font-semibold px-2 py-0.5 text-rose-700" style="background-color:#FFF1F2;">🔞 18+</span>` : ''}
               </div>
               <span class="font-mono text-[11px] text-fadedInk/80">${formattedDate}</span>
             </div>
@@ -2892,15 +2984,15 @@
               </span>
               
               <div class="flex items-center gap-2 opacity-75 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button type="button" onclick="openMoveScrapModal('${entry.id}', event)" class="text-fadedInk hover:text-forest p-1.5 rounded-lg hover:bg-sage-50 cursor-pointer" title="Move to a binder">
+                <button type="button" onclick="openMoveScrapModal('${entry.id}', event)" class="tactile-spring text-fadedInk hover:text-forest p-1.5 rounded-lg hover:bg-sage-50 cursor-pointer" title="Move to a binder">
                   <i data-lucide="folder-input" class="w-4 h-4 pointer-events-none"></i>
                 </button>
 
-                <button type="button" onclick="toggleCardSensitive('${entry.id}', event)" class="text-fadedInk hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
+                <button type="button" onclick="toggleCardSensitive('${entry.id}', event)" class="tactile-spring text-fadedInk hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer" title="${isSensitive ? 'Unmark 18+' : 'Mark as 18+'}">
                   <i data-lucide="${isSensitive ? 'shield-alert' : 'shield'}" class="w-4 h-4 pointer-events-none ${isSensitive ? 'text-rose-700' : ''}"></i>
                 </button>
 
-                <button type="button" onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="text-fadedInk hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer" title="Tear out page">
+                <button type="button" onclick="event.stopPropagation(); promptDeleteEntry('${entry.id}')" class="tactile-spring text-fadedInk hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer" title="Tear out page">
                   <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
                 </button>
               </div>
